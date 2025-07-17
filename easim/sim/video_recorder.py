@@ -268,16 +268,47 @@ class PygameVisualizer:
         if SENSOR_RGB in observations:
             rgb_image = observations[SENSOR_RGB]
 
-            # Convert to pygame surface
-            rgb_surface = pygame.surfarray.make_surface(
-                rgb_image.swapaxes(0, 1)
-            )
+            # Handle different image formats
+            if len(rgb_image.shape) == 3:
+                # Ensure image is in correct format for pygame
+                if rgb_image.dtype != np.uint8:
+                    # Convert to uint8 if needed
+                    if rgb_image.max() <= 1.0:
+                        rgb_image = (rgb_image * 255).astype(np.uint8)
+                    else:
+                        rgb_image = rgb_image.astype(np.uint8)
 
-            # Scale to fit window
-            scaled_surface = pygame.transform.scale(rgb_surface, self.window_size)
-            self.screen.blit(scaled_surface, (0, 0))
+                # Handle RGBA vs RGB
+                if rgb_image.shape[2] == 4:
+                    # Convert RGBA to RGB by dropping alpha channel
+                    rgb_image = rgb_image[:, :, :3]
+                    print("Converted RGBA to RGB")
+                elif rgb_image.shape[2] != 3:
+                    print(f"Unexpected number of channels: {rgb_image.shape[2]}")
+                    return
 
-        # Add controls text
+                try:
+                    # Create pygame surface - need to transpose for pygame (width, height)
+                    rgb_surface = pygame.surfarray.make_surface(
+                        rgb_image.swapaxes(0, 1)
+                    )
+
+                    # Scale to fit window
+                    scaled_surface = pygame.transform.scale(rgb_surface, self.window_size)
+                    self.screen.blit(scaled_surface, (0, 0))
+
+                except Exception as e:
+                    print(f"Surface creation failed: {e}")
+                    # Fallback: create gray screen
+                    self.screen.fill((128, 128, 128))
+            else:
+                print(f"Unexpected image dimensions: {rgb_image.shape}")
+                self.screen.fill((128, 128, 128))
+        else:
+            print(f"No color sensor found. Available: {list(observations.keys())}")
+            self.screen.fill((128, 128, 128))
+
+        # Add controls text with better positioning
         controls_text = [
             "Controls:",
             "W/↑ - Move Forward",
@@ -286,10 +317,16 @@ class PygameVisualizer:
             "ESC - Quit"
         ]
 
-        y_offset = 10
+        # Create semi-transparent background for text
+        text_bg = pygame.Surface((250, 160))
+        text_bg.set_alpha(180)
+        text_bg.fill((0, 0, 0))
+        self.screen.blit(text_bg, (10, 10))
+
+        y_offset = 20
         for line in controls_text:
             text_surface = self.font.render(line, True, (255, 255, 255))
-            self.screen.blit(text_surface, (10, y_offset))
-            y_offset += 30
+            self.screen.blit(text_surface, (20, y_offset))
+            y_offset += 25
 
         pygame.display.flip()

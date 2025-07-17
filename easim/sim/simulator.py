@@ -158,8 +158,8 @@ class BaseSimulator(ABC):
 
         state = habitat_sim.AgentState()
         state.position = np.array(position, dtype=np.float32)
-        # Skip rotation setting for now to avoid quaternion issues
-        # state.rotation = np.quaternion(1, 0, 0, 0)  # Identity quaternion
+        # Skip rotation setting to avoid quaternion issues
+        # state.rotation = ... # Commented out
         self.agent.set_state(state)
 
     def reset(self):

@@ -1,5 +1,4 @@
 # Core dependencies
-numpy<2.0
 scipy
 matplotlib
 opencv-python
@@ -10,7 +9,6 @@ habitat-sim>=0.3.0
 habitat-lab
 
 # Scientific computing
-numpy-quaternion
 
 # Optional dependencies for enhanced features
 pygame  # for interactive control

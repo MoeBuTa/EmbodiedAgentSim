@@ -7,6 +7,8 @@ channels:
 dependencies:
   # Python
   - python=3.9
+  - numpy=1.24.3
+  - quaternion=2022.4.2
 
   # System-level dependencies that work better with conda
   - cmake
