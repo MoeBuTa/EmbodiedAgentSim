@@ -1,0 +1,23 @@
+# Core dependencies
+numpy<2.0
+scipy
+matplotlib
+opencv-python
+tqdm
+
+# Habitat ecosystem
+habitat-sim>=0.3.0
+habitat-lab
+
+# Scientific computing
+numpy-quaternion
+
+# Optional dependencies for enhanced features
+pygame  # for interactive control
+gitpython  # for git operations
+imageio  # for video processing
+moviepy  # for advanced video operations
+
+# Development and utilities
+hydra-core  # for configuration management
+omegaconf  # configuration framework
