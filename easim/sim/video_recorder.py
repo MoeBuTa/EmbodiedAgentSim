@@ -47,14 +47,28 @@ class VideoRecorder:
         self.frames = []
 
     def add_frame(self, frame: np.ndarray):
-        """Add a frame to the video"""
+        """Add a frame to the video with proper RGB->BGR conversion"""
+        if frame is None:
+            return
+
+        # Fix 1: Ensure proper data type (Habitat often outputs float32)
+        if frame.dtype != np.uint8:
+            if frame.max() <= 1.0:
+                frame = (frame * 255).astype(np.uint8)
+            else:
+                frame = np.clip(frame, 0, 255).astype(np.uint8)
+
+        # Fix 2: Resize if needed
         if frame.shape[:2] != self.resolution[::-1]:  # OpenCV uses (height, width)
             frame = cv2.resize(frame, self.resolution)
 
-        # Convert RGB to BGR for OpenCV
+        # Fix 3: Convert RGB to BGR (THIS IS THE KEY FIX)
         if len(frame.shape) == 3 and frame.shape[2] == 3:
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        elif len(frame.shape) == 3 and frame.shape[2] == 4:
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGR)
 
+        # Write frame
         if self.writer is not None:
             self.writer.write(frame)
 
