@@ -1,23 +1,54 @@
 # EmbodiedAgentSim
 
-A clean, object-oriented framework for embodied AI simulation using Habitat-Lab. Features video recording, interactive control, and support for multiple datasets.
+A comprehensive, modular framework for embodied AI simulation supporting multiple tasks and datasets including Object Navigation, Vision-Language Navigation, and Embodied Question Answering.
 
-## Features
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Habitat-Sim](https://img.shields.io/badge/Habitat--Sim-0.3.0+-green.svg)](https://github.com/facebookresearch/habitat-sim)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-- 🤖 **Multi-Dataset Support**: MP3D and HM3D scenes
-- 🎥 **Video Recording**: Automatic MP4 generation from navigation
-- 🎮 **Interactive Control**: Real-time pygame-based control
-- 🏗️ **Clean OOP Design**: Extensible simulator and strategy classes
-- 📁 **Portable Setup**: No hardcoded paths, works anywhere
-- 🔧 **Graceful Degradation**: Works even with missing optional dependencies
+## 🚀 Features
 
-## Quick Start
+### 🎯 **Multi-Task Support**
+- **Object Navigation (ObjectNav)** - Navigate to find specific objects
+- **Vision-Language Navigation (VLN)** - Follow natural language instructions  
+- **Embodied Question Answering (EQA)** - Answer questions through exploration
+- **Point Navigation (PointNav)** - Navigate to specific coordinates
 
-### Installation
+### 🗂️ **Multi-Dataset Support**
+- **HM3D** - Habitat-Matterport 3D Dataset
+- **MP3D** - Matterport3D scenes
+- **R2R** - Room-to-Room VLN dataset
+
+### 🏗️ **Modular Architecture**
+- **Clean separation** of tasks, datasets, and evaluation
+- **Extensible design** - easy to add new tasks and datasets
+- **Proper inheritance** following Habitat framework patterns
+- **Configuration-driven** setup with dataclass configs
+
+### 📊 **Comprehensive Evaluation**
+- **Standard metrics** for each task (Success Rate, SPL, Navigation Error, Accuracy)
+- **Built-in evaluation framework** with detailed reporting
+- **Episode management** with proper data structures
+- **Metric visualization** and analysis tools
+
+### 🎥 **Recording & Visualization**
+- **Automatic video recording** from navigation episodes
+- **Interactive control** with pygame-based interface
+- **Frame-by-frame analysis** and trajectory visualization
+- **Custom recording strategies** and policies
+
+## 📦 Installation
+
+### Prerequisites
+- Python 3.9+
+- CUDA-compatible GPU (recommended)
+- 8GB+ RAM
+
+### Quick Setup
 
 ```bash
 # Clone repository
-git clone <your-repo-url>
+git clone https://github.com/yourusername/EmbodiedAgentSim.git
 cd EmbodiedAgentSim
 
 # Create conda environment
@@ -26,293 +57,609 @@ conda activate habitat
 
 # Install package
 pip install -e .
+
+# Download test data
+easim dataset download habitat_test_scenes
 ```
 
-### Download Test Data
+### Development Setup
 
 ```bash
-# Download MP3D test scenes
-python -m habitat_sim.utils.datasets_download --uids habitat_test_scenes --data-path data
+# Install with all optional dependencies
+pip install -e .[full]
 
-# Optional: Download example objects
-python -m habitat_sim.utils.datasets_download --uids habitat_example_objects --data-path data
+# Or install specific components
+pip install -e .[interactive]  # For pygame support
+pip install -e .[habitat]      # For habitat-lab integration
 ```
 
-### Basic Usage
+## 🎯 Quick Start
 
+### Basic Simulator Test
 ```bash
-# Test basic simulator
+# Test MP3D simulator
 easim simulator --dataset MP3D
 
+# Test HM3D simulator  
+easim simulator --dataset HM3D --list-scenes
+```
+
+### Run Tasks
+
+```bash
+# Object Navigation on HM3D
+easim task --task-type objectnav --dataset hm3d --episodes 10
+
+# R2R Vision-Language Navigation
+easim task --task-type vln --dataset r2r --split val_seen --episodes 5
+
+# Embodied Question Answering
+easim task --task-type eqa --dataset mp3d --episodes 5
+```
+
+### Evaluation
+
+```bash
+# Evaluate random agent on ObjectNav
+easim evaluate --task-type objectnav --dataset hm3d --agent random --episodes 50
+
+# Evaluate on R2R with specific metrics
+easim evaluate --task-type vln --dataset r2r --agent forward --episodes 100 --output-file results.json
+```
+
+### Recording & Interaction
+
+```bash
 # Record navigation video
-easim record --dataset MP3D --max-steps 100 --video-name exploration.mp4
+easim record --dataset MP3D --task-type objectnav --max-steps 100 --video-name exploration.mp4
 
-# Interactive control (requires pygame)
-easim interactive --dataset MP3D
+# Interactive control
+easim interactive --dataset HM3D --task-type navigation
+# Controls: W/↑=Forward, A/←=Left, D/→=Right, ESC=Quit
 ```
 
-## Commands
+## 🏗️ Architecture
 
-### `easim simulator`
-Test basic simulator functionality with different datasets.
-
-```bash
-easim simulator --dataset MP3D              # Test MP3D simulator
-easim simulator --dataset HM3D              # Test HM3D simulator  
-easim simulator --scene-path path/to/scene  # Custom scene
-```
-
-### `easim record`
-Record navigation videos with different strategies.
-
-```bash
-# Basic recording
-easim record --dataset MP3D --max-steps 200
-
-# Custom output
-easim record --dataset HM3D --output-dir videos --video-name my_nav.mp4
-
-# Longer exploration
-easim record --dataset MP3D --max-steps 500 --video-name long_exploration.mp4
-```
-
-### `easim interactive`
-Real-time interactive control with keyboard.
-
-```bash
-easim interactive --dataset MP3D
-
-# Controls:
-# W/↑ - Move Forward
-# A/← - Turn Left  
-# D/→ - Turn Right
-# ESC - Quit
-```
-
-## Project Structure
+### Project Structure
 
 ```
 EmbodiedAgentSim/
 ├── easim/
-│   ├── sim/
-│   │   ├── simulator.py          # Core simulator classes
-│   │   ├── video_recorder.py     # Recording and strategies
-│   │   └── task_environments.py  # Task environments (optional)
-│   ├── utils/
-│   │   ├── constants.py          # Path configurations
-│   │   └── config.py             # Habitat configurations
-│   ├── examples/
-│   │   └── use_cases.py          # Demo functions
-│   └── run.py                    # Main entry point
-├── data/
-│   ├── scene_datasets/           # Scene files
-│   └── output/                   # Generated videos
-├── environment.yml               # Conda environment
-└── setup.py                     # Package setup
+│   ├── core/                    # Core simulation components
+│   │   ├── actions.py          # Action space definitions
+│   │   ├── sensors.py          # Sensor configurations
+│   │   ├── agents.py           # Agent configurations
+│   │   └── simulator.py        # Core simulator
+│   ├── tasks/                   # Task implementations
+│   │   ├── base/               # Base framework
+│   │   │   ├── task.py         # Base task class
+│   │   │   ├── episode.py      # Episode data structures
+│   │   │   ├── metrics.py      # Evaluation metrics
+│   │   │   └── configs.py      # Configuration dataclasses
+│   │   ├── nav/                # Navigation tasks
+│   │   │   └── objectnav/      # Object Navigation
+│   │   ├── vln/                # Vision-Language Navigation
+│   │   │   └── r2r/            # Room-to-Room dataset
+│   │   └── eqa/                # Embodied Question Answering
+│   │       └── mp3deqa/        # MP3D EQA dataset
+│   ├── datasets/               # Dataset loaders
+│   │   ├── base/               # Base dataset classes
+│   │   ├── hm3d/               # HM3D dataset support
+│   │   ├── mp3d/               # MP3D dataset support
+│   │   └── r2r/                # R2R dataset support
+│   ├── sim/                    # Legacy simulation components
+│   └── utils/                  # Utilities and constants
+├── data/                       # Data directory
+│   ├── scene_datasets/         # Scene files (MP3D, HM3D)
+│   ├── datasets/               # Task datasets
+│   └── output/                 # Generated outputs
+└── examples/                   # Example scripts
 ```
 
-## Core Components
+### Core Components
 
-### Simulators
-
+#### Action Spaces
 ```python
-from easim.sim.simulator import SimulatorFactory
+from easim.core.actions import VLNActionSpace, EQAActionSpace
 
-# Create simulators
-mp3d_sim = SimulatorFactory.create_simulator("MP3D")
-hm3d_sim = SimulatorFactory.create_simulator("HM3D")
+# VLN action space with stop action
+vln_actions = VLNActionSpace(
+    forward_step=0.25,
+    turn_angle=15.0
+)
 
-# Custom simulator
-from easim.sim.simulator import SimulatorConfig
-config = SimulatorConfig(scene_path="path/to/scene.glb", scene_dataset="config.json")
-custom_sim = SimulatorFactory.create_custom_simulator(config)
+# EQA action space with look and answer actions
+eqa_actions = EQAActionSpace(
+    forward_step=0.25,
+    turn_angle=30.0,
+    answer_vocab_size=3000
+)
 ```
 
-### Video Recording
-
+#### Sensor Suites
 ```python
-from easim.sim.video_recorder import SimulationRecorder, RandomNavigationStrategy
+from easim.core.sensors import ObjectNavSensorSuite, VLNSensorSuite
 
-# Setup recording
-recorder = SimulationRecorder(simulator, "output_dir")
-strategy = RandomNavigationStrategy(max_steps=100, forward_prob=0.7)
+# ObjectNav sensors (RGB, depth, GPS, compass, object goal)
+objectnav_sensors = ObjectNavSensorSuite(
+    resolution=(256, 256),
+    camera_height=1.25
+)
 
-# Record navigation
-result = recorder.record_navigation(strategy, "video.mp4", save_frames=True)
+# VLN sensors (RGB, depth, instruction)
+vln_sensors = VLNSensorSuite(
+    resolution=(224, 224),
+    max_instruction_length=512
+)
 ```
 
-### Navigation Strategies
+#### Agents
+```python
+from easim.core.agents import ObjectNavAgent, VLNAgent
+
+# Create ObjectNav agent
+agent = ObjectNavAgent(
+    forward_step=0.25,
+    turn_angle=30.0,
+    resolution=(256, 256)
+)
+
+# Create VLN agent  
+vln_agent = VLNAgent(
+    forward_step=0.25,
+    turn_angle=15.0,
+    resolution=(224, 224)
+)
+```
+
+## 🎯 Tasks
+
+### Object Navigation
+
+Navigate indoor environments to find specific object categories.
 
 ```python
-from easim.sim.video_recorder import FixedPathStrategy
-from easim.utils.constants import ACTION_MOVE_FORWARD, ACTION_TURN_LEFT
+from easim.tasks.nav.objectnav.task import create_objectnav_task
 
-# Fixed action sequence
-actions = [ACTION_MOVE_FORWARD] * 10 + [ACTION_TURN_LEFT] * 3
-strategy = FixedPathStrategy(actions)
+# Create ObjectNav task
+task = create_objectnav_task(
+    dataset_name="hm3d",
+    split="val", 
+    max_episodes=100
+)
 
-# Custom strategy
-class MyStrategy(BaseNavigationStrategy):
-    def get_next_action(self, observations, step_count):
-        # Your navigation logic
-        return action
+# Simple random agent
+def random_agent(observations, step):
+    import random
+    return random.choice(["move_forward", "turn_left", "turn_right"])
+
+# Run evaluation
+from easim.tasks.base.task import TaskRunner
+runner = TaskRunner(task)
+results = runner.run_evaluation(10, random_agent)
+
+print(f"Success Rate: {results['metrics']['success_rate']:.3f}")
+print(f"SPL: {results['metrics']['spl']:.3f}")
+```
+
+**Supported Datasets**: HM3D, MP3D  
+**Metrics**: Success Rate, SPL, Path Length, Distance to Goal  
+**Object Categories**: 21 categories for HM3D, 16 for MP3D
+
+### Vision-Language Navigation
+
+Navigate by following natural language instructions.
+
+```python
+from easim.tasks.vln.r2r.task import create_r2r_task
+
+# Create R2R task
+task = create_r2r_task(
+    split="val_seen",
+    max_episodes=50
+)
+
+# Instruction-following agent (simplified)
+def instruction_agent(observations, step):
+    instruction = observations.get('instruction', '')
     
-    def is_done(self, observations, step_count):
-        # Termination condition  
-        return done
+    # Simple keyword-based navigation
+    if any(word in instruction.lower() for word in ['left', 'turn']):
+        return 'turn_left'
+    elif any(word in instruction.lower() for word in ['right']):
+        return 'turn_right' 
+    elif 'stop' in instruction.lower() or step > 100:
+        return 'stop'
+    else:
+        return 'move_forward'
+
+# Evaluate
+runner = TaskRunner(task)
+results = runner.run_evaluation(5, instruction_agent)
 ```
 
-## Advanced Usage
+**Dataset**: R2R (Room-to-Room)  
+**Metrics**: Success Rate, SPL, Navigation Error  
+**Instructions**: Natural language navigation instructions
 
-### Running Demos
+### Embodied Question Answering
+
+Answer questions about the environment through exploration.
 
 ```python
-from easim.examples.use_cases import random_exploration_demo, interactive_pygame_demo
+from easim.tasks.eqa.mp3deqa.task import create_mp3d_eqa_task
 
-# Run specific demos
-random_exploration_demo("MP3D", "output")
-interactive_pygame_demo("HM3D")
+# Create EQA task
+task = create_mp3d_eqa_task(
+    split="val",
+    max_episodes=20
+)
+
+# Simple EQA agent
+def eqa_agent(observations, step):
+    question = observations.get('question', '')
+    
+    # Explore for a bit, then answer
+    if step < 20:
+        actions = ["move_forward", "turn_left", "turn_right", "look_up", "look_down"]
+        import random
+        return random.choice(actions)
+    else:
+        return "answer"  # Give answer after exploration
+
+# Evaluate
+runner = TaskRunner(task)
+results = runner.run_evaluation(3, eqa_agent)
 ```
 
-### Custom Scenes
+**Dataset**: MP3D EQA  
+**Metrics**: Answer Accuracy, Mean Reciprocal Rank  
+**Question Types**: Existence, counting, spatial, color, object category
 
-```bash
-# Use custom scene file
-easim simulator --scene-path data/my_scenes/custom.glb
+## 📊 Evaluation & Metrics
 
-# Record with custom scene
-easim record --scene-path data/my_scenes/room.glb --video-name room_nav.mp4
+### Standard Metrics
+
+```python
+from easim.tasks.base.metrics import SuccessRate, SPL, PathLength
+
+# Create custom metric calculator
+metrics = [
+    SuccessRate(),
+    SPL(), 
+    PathLength()
+]
+
+from easim.tasks.base.metrics import MetricCalculator
+calculator = MetricCalculator(metrics)
+
+# Use in task evaluation
+results = calculator.compute_final_metrics()
+for name, result in results.items():
+    print(f"{name}: {result.value:.4f}")
 ```
 
-## Dependencies
+### Task-Specific Metrics
 
-### Required
-- `numpy` - Numerical computations
-- `opencv-python` - Video recording
-- `habitat-sim` - 3D simulation engine
+- **Navigation**: Success Rate, SPL, Path Length, Steps
+- **VLN**: Navigation Error, Oracle Success  
+- **EQA**: Answer Accuracy, Type-specific Accuracy
 
-### Optional
-- `pygame` - Interactive control (install: `pip install pygame`)
-- `habitat-lab` - Task environments (install: `pip install habitat-lab`)
-
-### Installation Options
+### Batch Evaluation
 
 ```bash
-# Basic installation
-pip install -e .
-
-# With interactive support
-pip install -e .[interactive]
-
-# With habitat-lab tasks
-pip install -e .[habitat]
-
-# Full installation
-pip install -e .[full]
+# Evaluate multiple episodes with detailed metrics
+easim evaluate \
+  --task-type objectnav \
+  --dataset hm3d \
+  --episodes 500 \
+  --agent random \
+  --output-file objectnav_results.json \
+  --metrics success_rate spl path_length
 ```
 
-## Configuration
+## 🗂️ Datasets
 
-The framework automatically detects your project structure. Key paths:
+### Downloading Datasets
 
-- **Project Root**: Auto-detected from package location
-- **Data Directory**: `{project_root}/data/`
-- **Output Directory**: `{project_root}/data/output/`
-- **Scene Datasets**: `{project_root}/data/scene_datasets/`
-
-No hardcoded paths - everything works relative to your project directory.
-
-## Troubleshooting
-
-### Scene Not Found
 ```bash
-# Check if scene files exist
-ls data/scene_datasets/mp3d_example/17DRP5sb8fy/
+# Download scene datasets
+easim dataset download habitat_test_scenes
+easim dataset download mp3d_example
+
+# Download task datasets  
+easim dataset download r2r
+
+# List available datasets
+easim dataset list --type scenes
+easim dataset list --type tasks
+```
+
+### Dataset Support
+
+| Dataset | Task | Scenes | Episodes | Status |
+|---------|------|--------|----------|---------|
+| HM3D | ObjectNav | 1000+ | 100k+ | ✅ Full |
+| MP3D | ObjectNav | 90 | 70k+ | ✅ Full |
+| MP3D | EQA | 90 | 50k+ | ✅ Full |
+| R2R | VLN | 90 | 20k+ | ✅ Full |
+
+### Custom Datasets
+
+```python
+from easim.datasets.base.dataset import BaseDataset, DatasetConfig
+from easim.tasks.base.episode import ObjectNavEpisode
+
+class MyDataset(BaseDataset):
+    def load_episodes(self):
+        # Load your episodes
+        episodes = []
+        # ... your loading logic
+        self.episodes = episodes
+        self._update_episode_dict()
+
+# Use custom dataset
+config = DatasetConfig(name="my_dataset", split="train")
+dataset = MyDataset(config)
+```
+
+## 🎨 Advanced Usage
+
+### Custom Tasks
+
+```python
+from easim.tasks.base.task import NavigationTask
+from easim.tasks.base.configs import NavigationConfig
+
+class MyNavigationTask(NavigationTask):
+    def _check_success(self, episode, agent_position, observations):
+        # Define custom success criteria
+        return self._get_distance_to_goal(episode, agent_position) < 2.0
+    
+    def _calculate_reward(self, episode, observations, action, success):
+        # Define custom reward function
+        reward = super()._calculate_reward(episode, observations, action, success)
+        
+        # Add custom reward shaping
+        if 'custom_sensor' in observations:
+            reward += 0.1
+        
+        return reward
+
+# Use custom task
+config = NavigationConfig(max_episode_steps=300)
+task = MyNavigationTask(config, simulator, episodes)
+```
+
+### Custom Agents
+
+```python
+from easim.core.agents import BaseAgent
+from easim.tasks.base.configs import AgentConfig
+
+# Custom agent configuration
+config = AgentConfig(
+    action_space_type="discrete_nav",
+    sensor_suite_type="full_vision",
+    height=1.8,  # Taller agent
+    radius=0.3,  # Wider agent
+    sensor_height=1.5
+)
+
+agent = BaseAgent(config)
+```
+
+### Configuration Management
+
+```python
+from easim.tasks.nav.objectnav.configs import ObjectNavConfig
+
+# Detailed ObjectNav configuration
+config = ObjectNavConfig(
+    max_episode_steps=750,
+    success_distance=1.5,
+    target_object_categories=["chair", "table", "sofa"],
+    view_success=True,
+    step_penalty=-0.005,
+    success_reward=15.0,
+    collision_penalty=-0.2
+)
+```
+
+## 🛠️ Development
+
+### Adding New Tasks
+
+1. **Create task directory**: `easim/tasks/mytask/`
+2. **Implement task class**: Extend `BaseTask`
+3. **Define configurations**: Create `configs.py` with dataclasses
+4. **Add episodes**: Define episode structure
+5. **Implement metrics**: Task-specific evaluation metrics
+6. **Add CLI support**: Update `run.py`
+
+```python
+# Example new task structure
+easim/tasks/mytask/
+├── __init__.py
+├── task.py          # Main task implementation
+├── configs.py       # Configuration dataclasses
+├── episode.py       # Episode data structures (if needed)
+└── metrics.py       # Task-specific metrics (if needed)
+```
+
+### Adding New Datasets
+
+1. **Create dataset directory**: `easim/datasets/mydataset/`
+2. **Implement dataset class**: Extend `BaseDataset`  
+3. **Define episode parser**: Convert data to episode format
+4. **Add download utilities**: If public dataset
+5. **Update constants**: Add paths and metadata
+
+### Testing
+
+```bash
+# Run basic tests
+python -m pytest tests/
+
+# Test specific components
+python -m easim.tasks.nav.objectnav.task  # Run demo
+python -m easim.datasets.r2r.dataset      # Test dataset loading
+```
+
+## 📚 API Reference
+
+### Core Classes
+
+- **`CoreSimulator`** - Main simulation engine
+- **`BaseTask`** - Abstract task implementation
+- **`BaseDataset`** - Abstract dataset loader
+- **`BaseAgent`** - Agent configuration and management
+- **`TaskRunner`** - Task execution and evaluation
+
+### Task Classes
+
+- **`ObjectNavigationTask`** - Object navigation implementation
+- **`R2RTask`** - R2R VLN implementation  
+- **`MP3DEQATask`** - MP3D EQA implementation
+
+### Dataset Classes
+
+- **`HM3DObjectNavDataset`** - HM3D ObjectNav episodes
+- **`MP3DObjectNavDataset`** - MP3D ObjectNav episodes
+- **`R2RDataset`** - R2R VLN episodes
+- **`MP3DEQADataset`** - MP3D EQA episodes
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Optional: Set data path
+export EASIM_DATA_PATH=/path/to/data
+
+# Optional: Set GPU device
+export CUDA_VISIBLE_DEVICES=0
+
+# Optional: Enable debug logging
+export EASIM_DEBUG=1
+```
+
+### Configuration Files
+
+The framework uses dataclass-based configurations:
+
+```python
+from easim.tasks.base.configs import TaskConfig
+
+config = TaskConfig(
+    max_episode_steps=500,
+    success_distance=1.0,
+    step_penalty=-0.01,
+    success_reward=10.0
+)
+```
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+**Scene files not found**
+```bash
+# Check available scenes
+easim info --list-scenes
 
 # Download test scenes
-python -m habitat_sim.utils.datasets_download --uids habitat_test_scenes --data-path data
+easim dataset download habitat_test_scenes
 ```
 
-### Import Errors
+**Import errors**
 ```bash
 # Reinstall package
 pip install -e .
 
-# Check installation
-easim --help
+# Check dependencies
+easim info --check-deps
 ```
 
-### Interactive Mode Issues
+**Interactive mode not working**
 ```bash
 # Install pygame
 pip install pygame
 
-# For conda environments
-conda install pygame
+# Or install with interactive support
+pip install -e .[interactive]
 ```
 
-### Video Recording Issues
-```bash
-# Check OpenCV installation
-python -c "import cv2; print(cv2.__version__)"
+**GPU/Memory issues**
+- Use `--gpu-id 0` to specify GPU
+- Reduce episode batch sizes
+- Use lower resolution sensors: `resolution=(128, 128)`
 
-# Reinstall if needed
-pip install opencv-python
-```
+### Performance Tips
 
-## Examples
+- **Use GPU**: Set `gpu_device_id=0` in configs
+- **Reduce resolution**: Use `(256, 256)` or lower for sensors  
+- **Limit episodes**: Start with small episode counts
+- **Cache scenes**: Enable scene caching for repeated use
 
-### Basic Navigation Recording
+## 📖 Examples
 
-```bash
-# Quick test
-easim record --dataset MP3D --max-steps 50
+See the [`examples/`](examples/) directory for:
 
-# Longer exploration  
-easim record --dataset MP3D --max-steps 200 --video-name long_nav.mp4
+- **Basic navigation** - Simple random and forward agents
+- **Custom agents** - Implementing your own navigation policies
+- **Dataset loading** - Working with different datasets
+- **Evaluation scripts** - Running comprehensive evaluations
+- **Video recording** - Creating navigation videos
 
-# Custom output directory
-easim record --dataset HM3D --output-dir my_videos --max-steps 150
-```
+## 🤝 Contributing
 
-### Interactive Exploration
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-```bash
-# Launch interactive mode
-easim interactive --dataset MP3D
-
-# Use WASD or arrow keys to navigate
-# Press ESC to quit
-```
-
-### Programmatic Usage
-
-```python
-from easim.sim.simulator import SimulatorFactory
-from easim.sim.video_recorder import SimulationRecorder, RandomNavigationStrategy
-
-# Create and test simulator
-simulator = SimulatorFactory.create_simulator("MP3D")
-observations = simulator.get_observations()
-print(f"RGB shape: {observations['color_sensor'].shape}")
-
-# Record navigation
-recorder = SimulationRecorder(simulator, "output")
-strategy = RandomNavigationStrategy(max_steps=100)
-result = recorder.record_navigation(strategy, "test.mp4")
-print(f"Recorded {result['total_steps']} steps")
-
-simulator.close()
-```
-
-## Contributing
+### Development Workflow
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
 4. Add tests if applicable
-5. Submit a pull request
+5. Update documentation
+6. Commit changes (`git commit -m 'Add amazing feature'`)
+7. Push to branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
 
-## License
+## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **[Habitat-Sim](https://github.com/facebookresearch/habitat-sim)** - 3D simulation platform
+- **[Habitat-Lab](https://github.com/facebookresearch/habitat-lab)** - Task definitions and benchmarks
+- **[Matterport3D](https://niessner.github.io/Matterport/)** - Scene dataset
+- **[HM3D](https://aihabitat.org/datasets/hm3d/)** - Scene dataset  
+- **[R2R Dataset](https://github.com/peteanderson80/Matterport3DSimulator)** - VLN benchmark
+
+## 📚 Citation
+
+If you use EmbodiedAgentSim in your research, please cite:
+
+```bibtex
+@software{embodied_agent_sim_2025,
+  title={EmbodiedAgentSim: A Comprehensive Framework for Embodied AI Simulation},
+  author={Your Name},
+  year={2025},
+  url={https://github.com/yourusername/EmbodiedAgentSim},
+  note={Software framework for embodied AI research}
+}
+```
+
+## 🔗 Links
+
+- **Documentation**: [https://embodiedagentsim.readthedocs.io](https://embodiedagentsim.readthedocs.io)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/EmbodiedAgentSim/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/EmbodiedAgentSim/discussions)
+- **Paper**: [ArXiv Link](https://arxiv.org/abs/your-paper) (if available)
+
+---
+
+**Happy Simulating! 🤖🏠**
