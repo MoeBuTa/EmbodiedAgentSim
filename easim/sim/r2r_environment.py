@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from pathlib import Path
 
 from easim.sim.simulator import SimulatorFactory, SimulatorConfig
-from easim.datasets.r2r_loader import R2RDatasetLoader, R2REpisode
+from easim.sim.r2r_loader import R2RDatasetLoader, R2REpisode
 from easim.utils.constants import DATA_PATH
 
 
