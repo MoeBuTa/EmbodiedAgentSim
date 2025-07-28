@@ -1,3 +1,6 @@
+"""
+Video recording functionality for core simulator
+"""
 import cv2
 import numpy as np
 import time
@@ -6,23 +9,19 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 
 from easim.utils.constants import (
-    DEFAULT_FPS, DEFAULT_VIDEO_RESOLUTION, DEFAULT_VIDEO_CODEC,
-    ACTION_MOVE_FORWARD, ACTION_TURN_LEFT, ACTION_TURN_RIGHT,
-    SENSOR_RGB
+    DEFAULT_FPS, DEFAULT_VIDEO_RESOLUTION, DEFAULT_VIDEO_CODEC
 )
 
 # Import pygame only when needed to avoid dependency issues
 try:
     import pygame
-
     PYGAME_AVAILABLE = True
 except ImportError:
     PYGAME_AVAILABLE = False
-    print("Warning: pygame not available, interactive mode disabled")
 
 
 class VideoRecorder:
-    """Records simulation videos"""
+    """Records simulation videos from RGB observations"""
 
     def __init__(self, output_path: str, fps: int = DEFAULT_FPS,
                  resolution: Tuple[int, int] = DEFAULT_VIDEO_RESOLUTION):
@@ -51,18 +50,18 @@ class VideoRecorder:
         if frame is None:
             return
 
-        # Fix 1: Ensure proper data type (Habitat often outputs float32)
+        # Ensure proper data type
         if frame.dtype != np.uint8:
             if frame.max() <= 1.0:
                 frame = (frame * 255).astype(np.uint8)
             else:
                 frame = np.clip(frame, 0, 255).astype(np.uint8)
 
-        # Fix 2: Resize if needed
+        # Resize if needed
         if frame.shape[:2] != self.resolution[::-1]:  # OpenCV uses (height, width)
             frame = cv2.resize(frame, self.resolution)
 
-        # Fix 3: Convert RGB to BGR (THIS IS THE KEY FIX)
+        # Convert RGB to BGR for OpenCV
         if len(frame.shape) == 3 and frame.shape[2] == 3:
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         elif len(frame.shape) == 3 and frame.shape[2] == 4:
@@ -113,15 +112,15 @@ class RandomNavigationStrategy(BaseNavigationStrategy):
     def __init__(self, max_steps: int = 100, forward_prob: float = 0.7):
         self.max_steps = max_steps
         self.forward_prob = forward_prob
-        self.actions = [ACTION_MOVE_FORWARD, ACTION_TURN_LEFT, ACTION_TURN_RIGHT]
+        self.actions = ["move_forward", "turn_left", "turn_right"]
 
     def get_next_action(self, observations: Dict[str, np.ndarray],
                         step_count: int) -> str:
         """Get random action with forward bias"""
         if np.random.random() < self.forward_prob:
-            return ACTION_MOVE_FORWARD
+            return "move_forward"
         else:
-            return np.random.choice([ACTION_TURN_LEFT, ACTION_TURN_RIGHT])
+            return np.random.choice(["turn_left", "turn_right"])
 
     def is_done(self, observations: Dict[str, np.ndarray],
                 step_count: int) -> bool:
@@ -143,78 +142,12 @@ class FixedPathStrategy(BaseNavigationStrategy):
             action = self.action_sequence[self.current_step]
             self.current_step += 1
             return action
-        return ACTION_MOVE_FORWARD  # Default action
+        return "move_forward"  # Default action
 
     def is_done(self, observations: Dict[str, np.ndarray],
                 step_count: int) -> bool:
         """Stop when sequence is complete"""
         return self.current_step >= len(self.action_sequence)
-
-
-class SimulationRecorder:
-    """Records simulation with video and automation support"""
-
-    def __init__(self, simulator, output_dir: str):
-        self.simulator = simulator
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-
-        self.video_recorder = None
-        self.current_strategy = None
-
-    def record_navigation(self, strategy: BaseNavigationStrategy,
-                          video_filename: str = "navigation.mp4",
-                          save_frames: bool = False) -> Dict[str, Any]:
-        """Record navigation using given strategy"""
-
-        # Setup video recording
-        video_path = self.output_dir / video_filename
-        self.video_recorder = VideoRecorder(str(video_path))
-        self.video_recorder.start_recording()
-
-        # Reset simulator
-        self.simulator.reset()
-
-        # Navigation loop
-        step_count = 0
-        start_time = time.time()
-
-        while True:
-            # Get observations
-            observations = self.simulator.get_observations()
-
-            # Add frame to video
-            if SENSOR_RGB in observations:
-                rgb_frame = observations[SENSOR_RGB]
-                self.video_recorder.add_frame(rgb_frame)
-
-            # Check if done
-            if strategy.is_done(observations, step_count):
-                break
-
-            # Get next action
-            action = strategy.get_next_action(observations, step_count)
-
-            # Take action
-            observations = self.simulator.step(action)
-            step_count += 1
-
-        # Finalize recording
-        end_time = time.time()
-        self.video_recorder.stop_recording()
-
-        # Save frames if requested
-        if save_frames:
-            frames_dir = self.output_dir / f"{video_filename}_frames"
-            self.video_recorder.save_frames_as_images(str(frames_dir))
-
-        # Return statistics
-        return {
-            "total_steps": step_count,
-            "duration": end_time - start_time,
-            "video_path": str(video_path),
-            "scene_info": self.simulator.get_scene_info()
-        }
 
 
 class PygameVisualizer:
@@ -230,8 +163,6 @@ class PygameVisualizer:
         pygame.display.set_caption("Habitat Simulation")
         self.clock = pygame.time.Clock()
         self.running = False
-
-        # Font for text display
         self.font = pygame.font.Font(None, 36)
 
     def run_interactive_simulation(self, simulator):
@@ -264,11 +195,11 @@ class PygameVisualizer:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    action = ACTION_MOVE_FORWARD
+                    action = "move_forward"
                 elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    action = ACTION_TURN_LEFT
+                    action = "turn_left"
                 elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    action = ACTION_TURN_RIGHT
+                    action = "turn_right"
                 elif event.key == pygame.K_ESCAPE:
                     self.running = False
 
@@ -279,14 +210,12 @@ class PygameVisualizer:
         self.screen.fill((0, 0, 0))  # Clear screen
 
         # Display RGB image if available
-        if SENSOR_RGB in observations:
-            rgb_image = observations[SENSOR_RGB]
+        if 'rgb' in observations:
+            rgb_image = observations['rgb']
 
-            # Handle different image formats
             if len(rgb_image.shape) == 3:
                 # Ensure image is in correct format for pygame
                 if rgb_image.dtype != np.uint8:
-                    # Convert to uint8 if needed
                     if rgb_image.max() <= 1.0:
                         rgb_image = (rgb_image * 255).astype(np.uint8)
                     else:
@@ -294,35 +223,30 @@ class PygameVisualizer:
 
                 # Handle RGBA vs RGB
                 if rgb_image.shape[2] == 4:
-                    # Convert RGBA to RGB by dropping alpha channel
                     rgb_image = rgb_image[:, :, :3]
-                    print("Converted RGBA to RGB")
                 elif rgb_image.shape[2] != 3:
                     print(f"Unexpected number of channels: {rgb_image.shape[2]}")
                     return
 
                 try:
-                    # Create pygame surface - need to transpose for pygame (width, height)
+                    # Create pygame surface
                     rgb_surface = pygame.surfarray.make_surface(
                         rgb_image.swapaxes(0, 1)
                     )
-
-                    # Scale to fit window
                     scaled_surface = pygame.transform.scale(rgb_surface, self.window_size)
                     self.screen.blit(scaled_surface, (0, 0))
 
                 except Exception as e:
                     print(f"Surface creation failed: {e}")
-                    # Fallback: create gray screen
                     self.screen.fill((128, 128, 128))
             else:
                 print(f"Unexpected image dimensions: {rgb_image.shape}")
                 self.screen.fill((128, 128, 128))
         else:
-            print(f"No color sensor found. Available: {list(observations.keys())}")
+            print(f"No RGB sensor found. Available: {list(observations.keys())}")
             self.screen.fill((128, 128, 128))
 
-        # Add controls text with better positioning
+        # Add controls text
         controls_text = [
             "Controls:",
             "W/↑ - Move Forward",
@@ -331,7 +255,7 @@ class PygameVisualizer:
             "ESC - Quit"
         ]
 
-        # Create semi-transparent background for text
+        # Semi-transparent background for text
         text_bg = pygame.Surface((250, 160))
         text_bg.set_alpha(180)
         text_bg.fill((0, 0, 0))
@@ -344,3 +268,70 @@ class PygameVisualizer:
             y_offset += 25
 
         pygame.display.flip()
+
+
+# Integration functions for CoreSimulator
+def record_navigation(simulator,
+                     strategy: BaseNavigationStrategy,
+                     output_path: str,
+                     fps: int = DEFAULT_FPS,
+                     save_frames: bool = False) -> Dict[str, Any]:
+    """Record navigation using given strategy"""
+
+    # Setup video recording
+    recorder = VideoRecorder(output_path, fps=fps)
+    recorder.start_recording()
+
+    # Reset simulator
+    simulator.reset()
+
+    # Navigation loop
+    step_count = 0
+    start_time = time.time()
+
+    while True:
+        # Get observations
+        observations = simulator.get_observations()
+
+        # Add frame to video
+        if 'rgb' in observations:
+            recorder.add_frame(observations['rgb'])
+
+        # Check if done
+        if strategy.is_done(observations, step_count):
+            break
+
+        # Get next action
+        action = strategy.get_next_action(observations, step_count)
+
+        # Take action
+        simulator.step(action)
+        step_count += 1
+
+    # Finalize recording
+    end_time = time.time()
+    recorder.stop_recording()
+
+    # Save frames if requested
+    if save_frames:
+        frames_dir = Path(output_path).parent / f"{Path(output_path).stem}_frames"
+        recorder.save_frames_as_images(str(frames_dir))
+
+    # Return statistics
+    return {
+        "total_steps": step_count,
+        "duration": end_time - start_time,
+        "video_path": str(Path(output_path).absolute()),
+        "fps": fps
+    }
+
+
+def run_interactive_simulation(simulator):
+    """Run interactive simulation with pygame visualization"""
+    if not PYGAME_AVAILABLE:
+        print("pygame is required for interactive mode")
+        print("Install with: pip install pygame")
+        return
+
+    visualizer = PygameVisualizer(window_size=(800, 600))
+    visualizer.run_interactive_simulation(simulator)

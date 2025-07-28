@@ -38,22 +38,6 @@ HM3D_SCENE_DATASET = HM3D_SCENE_DIR / "hm3d_annotated_basis.scene_dataset_config
 
 
 # ============================================================================
-# TASK DATASETS
-# ============================================================================
-
-TASK_DATASETS_DIR = DATA_PATH / "datasets"
-VLN_DATASETS_DIR = TASK_DATASETS_DIR / "vln"
-OBJECTNAV_DATASETS_DIR = TASK_DATASETS_DIR / "objectnav"
-EQA_DATASETS_DIR = TASK_DATASETS_DIR / "eqa"
-
-# Specific datasets
-R2R_DATASET_DIR = VLN_DATASETS_DIR / "r2r"
-HM3D_OBJECTNAV_DIR = OBJECTNAV_DATASETS_DIR / "hm3d"
-MP3D_OBJECTNAV_DIR = OBJECTNAV_DATASETS_DIR / "mp3d"
-MP3D_EQA_DIR = EQA_DATASETS_DIR / "mp3d"
-
-
-# ============================================================================
 # HABITAT CONFIG PATHS
 # ============================================================================
 
@@ -209,6 +193,7 @@ SUPPORTED_TASKS = ["pointnav", "objectnav", "vln", "r2r", "eqa"]
 NAVIGATION_METRICS = ["success_rate", "spl", "path_length", "distance_to_goal", "steps"]
 VLN_METRICS = ["success_rate", "spl", "navigation_error", "path_length"]
 EQA_METRICS = ["accuracy", "mean_reciprocal_rank"]
+
 
 
 # ============================================================================

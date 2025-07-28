@@ -17,7 +17,6 @@ class AgentConfig:
     height: float = 1.5
     radius: float = 0.2
     mass: float = 32.0
-    linear_acceleration: float = 20.0
     angular_acceleration: float = 4 * np.pi
     linear_friction: float = 0.5
     angular_friction: float = 1.0
@@ -59,12 +58,6 @@ class BaseAgent:
         # Basic agent properties
         agent_cfg.height = self.config.height
         agent_cfg.radius = self.config.radius
-        agent_cfg.mass = self.config.mass
-        agent_cfg.linear_acceleration = self.config.linear_acceleration
-        agent_cfg.angular_acceleration = self.config.angular_acceleration
-        agent_cfg.linear_friction = self.config.linear_friction
-        agent_cfg.angular_friction = self.config.angular_friction
-        agent_cfg.coefficient_of_restitution = self.config.coefficient_of_restitution
 
         # Sensor and action configurations
         agent_cfg.sensor_specifications = self.sensor_suite.get_habitat_sensor_specs()

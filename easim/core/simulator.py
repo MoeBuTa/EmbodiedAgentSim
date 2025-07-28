@@ -1,5 +1,5 @@
 """
-Core simulator for embodied AI
+Core simulator for embodied AI with integrated video recording
 """
 import habitat_sim
 import numpy as np
@@ -8,6 +8,10 @@ from pathlib import Path
 from dataclasses import dataclass
 
 from easim.core.agents import BaseAgent, AgentFactory, get_task_agent
+from easim.core.video_recorder import (
+    BaseNavigationStrategy, RandomNavigationStrategy,
+    FixedPathStrategy, record_navigation, run_interactive_simulation
+)
 from easim.utils.constants import (
     DATA_PATH, TEST_SCENE_MP3D, TEST_SCENE_HM3D,
     MP3D_SCENE_DATASET, HM3D_SCENE_DATASET
@@ -28,7 +32,7 @@ class SimulatorConfig:
 
 
 class CoreSimulator:
-    """Core simulator for embodied AI tasks"""
+    """Core simulator for embodied AI tasks with video recording support"""
 
     def __init__(self,
                  config: SimulatorConfig,
@@ -39,23 +43,27 @@ class CoreSimulator:
         self.agents = {}
         self.current_scene_id = None
 
-        # Initialize simulator
-        self._initialize_simulator()
+        # Create default agent if none provided
+        if agent is None and agent_config is None:
+            from easim.core.agents import NavigationAgent
+            agent = NavigationAgent()
 
-        # Add default agent if provided
-        if agent is not None:
-            self.add_agent(0, agent)
-        elif agent_config is not None:
-            agent = AgentFactory.create_agent(**agent_config)
-            self.add_agent(0, agent)
+        # Initialize simulator with agent
+        self._initialize_simulator(agent or AgentFactory.create_agent(**agent_config))
 
-    def _initialize_simulator(self):
-        """Initialize the habitat simulator backend"""
-        sim_cfg = self._create_simulator_config()
+    def _initialize_simulator(self, agent: BaseAgent):
+        """Initialize the habitat simulator backend with an agent"""
+        sim_cfg = self._create_simulator_config(agent)
         self.sim = habitat_sim.Simulator(sim_cfg)
 
-    def _create_simulator_config(self) -> habitat_sim.Configuration:
-        """Create habitat simulator configuration"""
+        # Store the initial agent
+        self.agents[0] = {
+            'agent': agent,
+            'habitat_agent': self.sim.agents[0]
+        }
+
+    def _create_simulator_config(self, agent: BaseAgent) -> habitat_sim.Configuration:
+        """Create habitat simulator configuration with agent"""
         # Backend configuration
         backend_cfg = habitat_sim.SimulatorConfiguration()
         backend_cfg.gpu_device_id = self.config.gpu_device_id
@@ -71,8 +79,11 @@ class CoreSimulator:
         if self.config.random_seed is not None:
             backend_cfg.random_seed = self.config.random_seed
 
-        # Create configuration with empty agent list (agents added later)
-        return habitat_sim.Configuration(backend_cfg, [])
+        # Get agent configuration
+        agent_cfg = agent.get_habitat_agent_config()
+
+        # Create configuration with agent
+        return habitat_sim.Configuration(backend_cfg, [agent_cfg])
 
     def _resolve_scene_path(self) -> str:
         """Resolve scene path based on configuration"""
@@ -180,12 +191,18 @@ class CoreSimulator:
     def reconfigure(self, config: SimulatorConfig):
         """Reconfigure simulator with new settings"""
         self.config = config
-        self.close()
-        self._initialize_simulator()
 
-        # Re-add agents
-        agents_to_readd = [(aid, info['agent']) for aid, info in self.agents.items()]
-        self.agents.clear()
+        # Get the current primary agent to maintain it
+        primary_agent = self.agents.get(0, {}).get('agent')
+        if primary_agent is None:
+            from easim.core.agents import NavigationAgent
+            primary_agent = NavigationAgent()
+
+        self.close()
+        self._initialize_simulator(primary_agent)
+
+        # Re-add any additional agents
+        agents_to_readd = [(aid, info['agent']) for aid, info in self.agents.items() if aid != 0]
 
         for agent_id, agent in agents_to_readd:
             self.add_agent(agent_id, agent)
@@ -249,6 +266,44 @@ class CoreSimulator:
 
         found_path = pathfinder.find_path(path)
         return found_path.points if found_path.points else [start, end]
+
+    # Video recording methods
+    def record_navigation(self,
+                         strategy: BaseNavigationStrategy,
+                         output_path: str,
+                         fps: int = 30,
+                         save_frames: bool = False) -> Dict[str, Any]:
+        """Record navigation video using strategy"""
+        return record_navigation(
+            simulator=self,
+            strategy=strategy,
+            output_path=output_path,
+            fps=fps,
+            save_frames=save_frames
+        )
+
+    def record_random_navigation(self,
+                                output_path: str,
+                                max_steps: int = 100,
+                                forward_prob: float = 0.7,
+                                fps: int = 30,
+                                save_frames: bool = False) -> Dict[str, Any]:
+        """Record random navigation video"""
+        strategy = RandomNavigationStrategy(max_steps=max_steps, forward_prob=forward_prob)
+        return self.record_navigation(strategy, output_path, fps, save_frames)
+
+    def record_fixed_path(self,
+                         action_sequence: List[str],
+                         output_path: str,
+                         fps: int = 30,
+                         save_frames: bool = False) -> Dict[str, Any]:
+        """Record navigation with fixed action sequence"""
+        strategy = FixedPathStrategy(action_sequence)
+        return self.record_navigation(strategy, output_path, fps, save_frames)
+
+    def run_interactive(self):
+        """Run interactive simulation with pygame controls"""
+        run_interactive_simulation(self)
 
     def close(self):
         """Close the simulator"""

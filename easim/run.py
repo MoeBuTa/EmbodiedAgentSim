@@ -1,9 +1,8 @@
 import argparse
 import sys
+import time
 from pathlib import Path
-
-from easim.sim.simulator import SimulatorFactory
-from easim.sim.video_recorder import SimulationRecorder, PygameVisualizer, RandomNavigationStrategy
+from easim.core.simulator import CoreSimulator, SimulatorConfig
 from easim.utils.constants import PROJECT_DIR, DATA_PATH, OUTPUT_DIR, TEST_SCENE_MP3D
 
 
@@ -40,6 +39,8 @@ Examples:
     record_parser.add_argument('--output-dir', default=str(OUTPUT_DIR), help='Output directory')
     record_parser.add_argument('--video-name', default='simulation.mp4', help='Video filename')
     record_parser.add_argument('--max-steps', type=int, default=100, help='Max navigation steps')
+    record_parser.add_argument('--fps', type=int, default=30, help='Video FPS')
+    record_parser.add_argument('--save-frames', action='store_true', help='Save individual frames')
 
     # Interactive command
     interactive_parser = subparsers.add_parser('interactive', help='Interactive control')
@@ -54,9 +55,12 @@ def run_simulator_mode(args):
     print(f"=== Simulator Mode ({args.dataset}) ===")
 
     try:
-        # Create simulator
-        scene_path = args.scene_path if args.scene_path else None
-        simulator = SimulatorFactory.create_simulator(args.dataset, scene_path)
+        # Create simulator using new core module
+        config = SimulatorConfig(
+            scene_path=args.scene_path,
+            dataset_type=args.dataset
+        )
+        simulator = CoreSimulator(config)
 
         print(f"Simulator created successfully!")
         print(f"Scene info: {simulator.get_scene_info()}")
@@ -98,43 +102,118 @@ def run_simulator_mode(args):
 
 
 def run_record_mode(args):
-    """Run recording mode"""
+    """Run recording mode with error handling"""
     print(f"=== Record Mode ({args.dataset}) ===")
 
     try:
-        # Create simulator
-        scene_path = args.scene_path if args.scene_path else None
-        simulator = SimulatorFactory.create_simulator(args.dataset, scene_path)
+        # Create simulator using simplified approach
+        import habitat_sim
+        import numpy as np
+        from easim.core.video_recorder import VideoRecorder, RandomNavigationStrategy
+        from easim.utils.constants import (
+            TEST_SCENE_MP3D, TEST_SCENE_HM3D, DEFAULT_SENSOR_RESOLUTION,
+            DEFAULT_SENSOR_HEIGHT, DEFAULT_FORWARD_STEP, DEFAULT_TURN_ANGLE
+        )
 
-        # Create recorder
-        recorder = SimulationRecorder(simulator, args.output_dir)
+        # Determine scene path
+        if args.scene_path:
+            scene_path = args.scene_path
+        elif args.dataset == "MP3D":
+            scene_path = str(TEST_SCENE_MP3D)
+        else:
+            scene_path = str(TEST_SCENE_HM3D)
+
+        # Create basic simulator configuration
+        backend_cfg = habitat_sim.SimulatorConfiguration()
+        backend_cfg.scene_id = scene_path
+        backend_cfg.gpu_device_id = 0
+
+        # Create basic agent configuration
+        agent_cfg = habitat_sim.agent.AgentConfiguration()
+        agent_cfg.height = 1.5
+        agent_cfg.radius = 0.2
+
+        # Create RGB sensor
+        rgb_sensor = habitat_sim.CameraSensorSpec()
+        rgb_sensor.uuid = "rgb"
+        rgb_sensor.sensor_type = habitat_sim.SensorType.COLOR
+        rgb_sensor.resolution = [DEFAULT_SENSOR_RESOLUTION[1], DEFAULT_SENSOR_RESOLUTION[0]]
+        rgb_sensor.position = [0.0, DEFAULT_SENSOR_HEIGHT, 0.0]
+        rgb_sensor.sensor_subtype = habitat_sim.SensorSubType.PINHOLE
+
+        agent_cfg.sensor_specifications = [rgb_sensor]
+        agent_cfg.action_space = {
+            "move_forward": habitat_sim.agent.ActionSpec(
+                "move_forward", habitat_sim.agent.ActuationSpec(amount=DEFAULT_FORWARD_STEP)
+            ),
+            "turn_left": habitat_sim.agent.ActionSpec(
+                "turn_left", habitat_sim.agent.ActuationSpec(amount=DEFAULT_TURN_ANGLE)
+            ),
+            "turn_right": habitat_sim.agent.ActionSpec(
+                "turn_right", habitat_sim.agent.ActuationSpec(amount=DEFAULT_TURN_ANGLE)
+            )
+        }
+
+        # Create and initialize simulator
+        sim_cfg = habitat_sim.Configuration(backend_cfg, [agent_cfg])
+        sim = habitat_sim.Simulator(sim_cfg)
+
+        print("Simulator created successfully!")
+
+        # Setup output path
+        output_dir = Path(args.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        video_path = output_dir / args.video_name
+
+        # Create video recorder
+        recorder = VideoRecorder(str(video_path), fps=args.fps)
+        recorder.start_recording()
 
         # Create navigation strategy
-        strategy = RandomNavigationStrategy(
-            max_steps=args.max_steps,
-            forward_prob=0.7
-        )
+        strategy = RandomNavigationStrategy(max_steps=args.max_steps, forward_prob=0.7)
 
         # Record navigation
         print(f"Recording navigation for {args.max_steps} steps...")
-        result = recorder.record_navigation(
-            strategy,
-            video_filename=args.video_name,
-            save_frames=True
-        )
+        step_count = 0
+        start_time = time.time()
+
+        while not strategy.is_done(sim.get_sensor_observations(), step_count):
+            # Get observations
+            observations = sim.get_sensor_observations()
+
+            # Add frame to video
+            if 'rgb' in observations:
+                recorder.add_frame(observations['rgb'])
+
+            # Get next action
+            action = strategy.get_next_action(observations, step_count)
+
+            # Take action
+            sim.step(action)
+            step_count += 1
+
+        # Finalize recording
+        end_time = time.time()
+        recorder.stop_recording()
+
+        # Save frames if requested
+        if args.save_frames:
+            frames_dir = output_dir / f"{video_path.stem}_frames"
+            recorder.save_frames_as_images(str(frames_dir))
 
         print(f"Recording completed!")
-        print(f"  Total steps: {result['total_steps']}")
-        print(f"  Duration: {result['duration']:.2f}s")
-        print(f"  Video saved to: {result['video_path']}")
+        print(f"  Total steps: {step_count}")
+        print(f"  Duration: {end_time - start_time:.2f}s")
+        print(f"  Video saved to: {video_path}")
 
         # Cleanup
-        simulator.close()
+        sim.close()
 
     except Exception as e:
         print(f"Recording failed: {e}")
         print("Make sure the scene files exist and cv2 is installed")
-
+        import traceback
+        traceback.print_exc()
 
 def run_interactive_mode(args):
     """Run interactive mode with pygame"""
@@ -142,25 +221,84 @@ def run_interactive_mode(args):
     print("Controls: W/↑=Forward, A/←=Left, D/→=Right, ESC=Quit")
 
     try:
-        # Create simulator
-        scene_path = args.scene_path if args.scene_path else None
-        simulator = SimulatorFactory.create_simulator(args.dataset, scene_path)
+        # Create simulator using simplified approach (same as record mode)
+        import habitat_sim
+        from easim.core.video_recorder import PygameVisualizer
+        from easim.utils.constants import (
+            TEST_SCENE_MP3D, TEST_SCENE_HM3D, DEFAULT_SENSOR_RESOLUTION,
+            DEFAULT_SENSOR_HEIGHT, DEFAULT_FORWARD_STEP, DEFAULT_TURN_ANGLE
+        )
 
-        # Create visualizer
-        visualizer = PygameVisualizer(window_size=(800, 600))
+        # Determine scene path
+        if args.scene_path:
+            scene_path = args.scene_path
+        elif args.dataset == "MP3D":
+            scene_path = str(TEST_SCENE_MP3D)
+        else:
+            scene_path = str(TEST_SCENE_HM3D)
 
-        # Run interactive simulation
+        # Create basic simulator (same setup as record mode)
+        backend_cfg = habitat_sim.SimulatorConfiguration()
+        backend_cfg.scene_id = scene_path
+        backend_cfg.gpu_device_id = 0
+
+        agent_cfg = habitat_sim.agent.AgentConfiguration()
+        agent_cfg.height = 1.5
+        agent_cfg.radius = 0.2
+
+        # Create RGB sensor for visualization
+        rgb_sensor = habitat_sim.CameraSensorSpec()
+        rgb_sensor.uuid = "rgb"
+        rgb_sensor.sensor_type = habitat_sim.SensorType.COLOR
+        rgb_sensor.resolution = [DEFAULT_SENSOR_RESOLUTION[1], DEFAULT_SENSOR_RESOLUTION[0]]
+        rgb_sensor.position = [0.0, DEFAULT_SENSOR_HEIGHT, 0.0]
+        rgb_sensor.sensor_subtype = habitat_sim.SensorSubType.PINHOLE
+
+        agent_cfg.sensor_specifications = [rgb_sensor]
+        agent_cfg.action_space = {
+            "move_forward": habitat_sim.agent.ActionSpec(
+                "move_forward", habitat_sim.agent.ActuationSpec(amount=DEFAULT_FORWARD_STEP)
+            ),
+            "turn_left": habitat_sim.agent.ActionSpec(
+                "turn_left", habitat_sim.agent.ActuationSpec(amount=DEFAULT_TURN_ANGLE)
+            ),
+            "turn_right": habitat_sim.agent.ActionSpec(
+                "turn_right", habitat_sim.agent.ActuationSpec(amount=DEFAULT_TURN_ANGLE)
+            )
+        }
+
+        # Create simple simulator wrapper for pygame
+        class SimpleSimWrapper:
+            def __init__(self, habitat_sim):
+                self.sim = habitat_sim
+
+            def get_observations(self):
+                return self.sim.get_sensor_observations()
+
+            def step(self, action):
+                return self.sim.step(action)
+
+            def reset(self):
+                return self.sim.reset()
+
+        # Initialize and run
+        sim_cfg = habitat_sim.Configuration(backend_cfg, [agent_cfg])
+        sim = habitat_sim.Simulator(sim_cfg)
+        wrapper = SimpleSimWrapper(sim)
+
         print("Starting interactive simulation...")
-        visualizer.run_interactive_simulation(simulator)
+        visualizer = PygameVisualizer(window_size=(800, 600))
+        visualizer.run_interactive_simulation(wrapper)
 
-        # Cleanup
-        simulator.close()
+        sim.close()
 
     except ImportError:
         print("pygame is required for interactive mode")
         print("Install with: pip install pygame")
     except Exception as e:
         print(f"Interactive mode failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def main():
