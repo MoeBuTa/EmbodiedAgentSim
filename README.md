@@ -90,9 +90,6 @@ simulator.close()
 EmbodiedAgentSim/
 ├── easim/
 │   ├── core/                    # Core simulation (actions, sensors, agents, simulator)
-│   ├── tasks/                   # Task implementations (ObjectNav, EQA, etc.)
-│   ├── datasets/               # Dataset loaders (HM3D, MP3D, R2R)
-│   ├── examples/               # Example scripts
 │   └── utils/                  # Constants and utilities
 ├── data/                       # Auto-created data directory
 └── requirements.txt            # Dependencies
