@@ -1,9 +1,16 @@
 import argparse
 import sys
 import time
+import traceback
+import habitat_sim
+import numpy as np
 from pathlib import Path
 from easim.core.simulator import CoreSimulator, SimulatorConfig
-from easim.utils.constants import PROJECT_DIR, DATA_PATH, OUTPUT_DIR, TEST_SCENE_MP3D
+from easim.core.video_recorder import VideoRecorder, RandomNavigationStrategy, PygameVisualizer
+from easim.utils.constants import (
+    PROJECT_DIR, DATA_PATH, OUTPUT_DIR, TEST_SCENE_MP3D, TEST_SCENE_HM3D,
+    DEFAULT_SENSOR_RESOLUTION, DEFAULT_SENSOR_HEIGHT, DEFAULT_FORWARD_STEP, DEFAULT_TURN_ANGLE
+)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -96,7 +103,6 @@ def run_simulator_mode(args):
         print(f"Expected MP3D scene at: {TEST_SCENE_MP3D}")
 
         # Print additional debug info
-        import traceback
         print("\nFull error traceback:")
         traceback.print_exc()
 
@@ -107,13 +113,6 @@ def run_record_mode(args):
 
     try:
         # Create simulator using simplified approach
-        import habitat_sim
-        import numpy as np
-        from easim.core.video_recorder import VideoRecorder, RandomNavigationStrategy
-        from easim.utils.constants import (
-            TEST_SCENE_MP3D, TEST_SCENE_HM3D, DEFAULT_SENSOR_RESOLUTION,
-            DEFAULT_SENSOR_HEIGHT, DEFAULT_FORWARD_STEP, DEFAULT_TURN_ANGLE
-        )
 
         # Determine scene path
         if args.scene_path:
@@ -212,7 +211,6 @@ def run_record_mode(args):
     except Exception as e:
         print(f"Recording failed: {e}")
         print("Make sure the scene files exist and cv2 is installed")
-        import traceback
         traceback.print_exc()
 
 def run_interactive_mode(args):
@@ -222,12 +220,6 @@ def run_interactive_mode(args):
 
     try:
         # Create simulator using simplified approach (same as record mode)
-        import habitat_sim
-        from easim.core.video_recorder import PygameVisualizer
-        from easim.utils.constants import (
-            TEST_SCENE_MP3D, TEST_SCENE_HM3D, DEFAULT_SENSOR_RESOLUTION,
-            DEFAULT_SENSOR_HEIGHT, DEFAULT_FORWARD_STEP, DEFAULT_TURN_ANGLE
-        )
 
         # Determine scene path
         if args.scene_path:
@@ -297,7 +289,6 @@ def run_interactive_mode(args):
         print("Install with: pip install pygame")
     except Exception as e:
         print(f"Interactive mode failed: {e}")
-        import traceback
         traceback.print_exc()
 
 
@@ -332,7 +323,6 @@ def main():
         print("\nOperation interrupted by user")
     except Exception as e:
         print(f"Operation failed: {e}")
-        import traceback
         traceback.print_exc()
         return 1
 

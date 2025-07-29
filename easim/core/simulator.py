@@ -7,7 +7,6 @@ from typing import Dict, Any, Optional, List, Union
 from pathlib import Path
 from dataclasses import dataclass
 
-from easim.core.agents import BaseAgent, AgentFactory, get_task_agent
 from easim.core.video_recorder import (
     BaseNavigationStrategy, RandomNavigationStrategy,
     FixedPathStrategy, record_navigation, run_interactive_simulation
@@ -36,7 +35,7 @@ class CoreSimulator:
 
     def __init__(self,
                  config: SimulatorConfig,
-                 agent: Optional[BaseAgent] = None,
+                 agent: Optional[Any] = None,
                  agent_config: Optional[Dict[str, Any]] = None):
         self.config = config
         self.sim = None
@@ -45,13 +44,19 @@ class CoreSimulator:
 
         # Create default agent if none provided
         if agent is None and agent_config is None:
-            from easim.core.agents import NavigationAgent
-            agent = NavigationAgent()
+            # Use a simple agent placeholder since agents module is deleted
+            agent = None
 
         # Initialize simulator with agent
-        self._initialize_simulator(agent or AgentFactory.create_agent(**agent_config))
+        if agent is not None:
+            self._initialize_simulator(agent)
+        elif agent_config is not None:
+            # Handle agent config case
+            self._initialize_simulator(None)
+        else:
+            self._initialize_simulator(None)
 
-    def _initialize_simulator(self, agent: BaseAgent):
+    def _initialize_simulator(self, agent: Optional[Any]):
         """Initialize the habitat simulator backend with an agent"""
         sim_cfg = self._create_simulator_config(agent)
         self.sim = habitat_sim.Simulator(sim_cfg)
@@ -62,7 +67,7 @@ class CoreSimulator:
             'habitat_agent': self.sim.agents[0]
         }
 
-    def _create_simulator_config(self, agent: BaseAgent) -> habitat_sim.Configuration:
+    def _create_simulator_config(self, agent: Optional[Any]) -> habitat_sim.Configuration:
         """Create habitat simulator configuration with agent"""
         # Backend configuration
         backend_cfg = habitat_sim.SimulatorConfiguration()
@@ -80,7 +85,11 @@ class CoreSimulator:
             backend_cfg.random_seed = self.config.random_seed
 
         # Get agent configuration
-        agent_cfg = agent.get_habitat_agent_config()
+        if agent is not None and hasattr(agent, 'get_habitat_agent_config'):
+            agent_cfg = agent.get_habitat_agent_config()
+        else:
+            # Create default agent configuration
+            agent_cfg = habitat_sim.agent.AgentConfiguration()
 
         # Create configuration with agent
         return habitat_sim.Configuration(backend_cfg, [agent_cfg])
@@ -115,13 +124,16 @@ class CoreSimulator:
             # Return empty string for basic scene loading
             return ""
 
-    def add_agent(self, agent_id: int, agent: BaseAgent):
+    def add_agent(self, agent_id: int, agent: Any):
         """Add an agent to the simulator"""
         if self.sim is None:
             raise RuntimeError("Simulator not initialized")
 
         # Get habitat agent configuration
-        agent_cfg = agent.get_habitat_agent_config()
+        if hasattr(agent, 'get_habitat_agent_config'):
+            agent_cfg = agent.get_habitat_agent_config()
+        else:
+            agent_cfg = habitat_sim.agent.AgentConfiguration()
 
         # Initialize agent in simulator
         habitat_agent = self.sim.initialize_agent(agent_id, agent_cfg)
@@ -132,7 +144,7 @@ class CoreSimulator:
             'habitat_agent': habitat_agent
         }
 
-    def get_agent(self, agent_id: int = 0) -> Optional[BaseAgent]:
+    def get_agent(self, agent_id: int = 0) -> Optional[Any]:
         """Get agent by ID"""
         if agent_id in self.agents:
             return self.agents[agent_id]['agent']
@@ -152,7 +164,7 @@ class CoreSimulator:
         # Convert action index to name if needed
         if isinstance(action, int):
             agent = self.get_agent(agent_id)
-            if agent:
+            if agent and hasattr(agent, 'get_action_names'):
                 action_names = agent.get_action_names()
                 if 0 <= action < len(action_names):
                     action = action_names[action]
@@ -195,8 +207,8 @@ class CoreSimulator:
         # Get the current primary agent to maintain it
         primary_agent = self.agents.get(0, {}).get('agent')
         if primary_agent is None:
-            from easim.core.agents import NavigationAgent
-            primary_agent = NavigationAgent()
+            # Use None since agents module is deleted
+            primary_agent = None
 
         self.close()
         self._initialize_simulator(primary_agent)
