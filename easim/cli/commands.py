@@ -4,14 +4,11 @@ Command execution handlers for EmbodiedAgentSim CLI
 import traceback
 from easim.core.operations import run_simulator_test
 from easim.core.video_recorder import run_recording_session, run_interactive_session
-from easim.utils.constants import PROJECT_DIR, DATA_PATH
 
 
 def execute_command(args):
     """Execute the appropriate command based on arguments"""
     print("EmbodiedAgentSim - Habitat-based Simulation Framework")
-    print(f"Project directory: {PROJECT_DIR}")
-    print(f"Data directory: {DATA_PATH}")
     print(f"Command: {args.command}")
     print("-" * 50)
 

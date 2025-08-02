@@ -6,7 +6,7 @@ setup_habitat_lab_env()
 import habitat
 from habitat.sims.habitat_simulator.actions import HabitatSimActions
 import cv2
-
+import numpy as np
 
 FORWARD_KEY="w"
 LEFT_KEY="a"
@@ -18,17 +18,23 @@ def transform_rgb_bgr(image):
     return image[:, :, [2, 1, 0]]
 
 
+def transform_semantic_for_display(semantic):
+    """Convert semantic segmentation to displayable format"""
+
+    # Normalize to 0-255 range for display
+    semantic_display = ((semantic.astype(np.float32) / semantic.max()) * 255).astype(np.uint8)
+    return semantic_display
+
+
 def example():
     env = habitat.Env(
-        config=habitat.get_config("benchmark/nav/pointnav/pointnav_habitat_test.yaml")
+        config=habitat.get_config("benchmark/nav/objectnav/objectnav_hm3d.yaml")
     )
-
     print("Environment creation successful")
     observations = env.reset()
-    print("Destination, distance: {:3f}, theta(radians): {:.2f}".format(
-        observations["pointgoal_with_gps_compass"][0],
-        observations["pointgoal_with_gps_compass"][1]))
     cv2.imshow("RGB", transform_rgb_bgr(observations["rgb"]))
+    cv2.imshow("DEPTH", observations["depth"])
+
 
     print("Agent stepping around inside environment.")
 
@@ -54,18 +60,16 @@ def example():
 
         observations = env.step(action)
         count_steps += 1
+        print(observations)
 
-        print("Destination, distance: {:3f}, theta(radians): {:.2f}".format(
-            observations["pointgoal_with_gps_compass"][0],
-            observations["pointgoal_with_gps_compass"][1]))
-        cv2.imshow("RGB", transform_rgb_bgr(observations["rgb"]))
+        cv2.imshow("RGB", observations["rgb"])
+        cv2.imshow("DEPTH", observations["depth"])
+
+
 
     print("Episode finished after {} steps.".format(count_steps))
 
-    if (
-        action == HabitatSimActions.stop
-        and observations["pointgoal_with_gps_compass"][0] < 0.2
-    ):
+    if action == HabitatSimActions.stop:
         print("you successfully navigated to destination point")
     else:
         print("your navigation was unsuccessful")

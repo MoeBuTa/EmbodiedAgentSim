@@ -19,3 +19,5 @@ moviepy  # for advanced video operations
 # Development and utilities
 hydra-core  # for configuration management
 omegaconf  # configuration framework
+
+openai
