@@ -9,7 +9,7 @@ from habitat.sims.habitat_simulator.actions import HabitatSimActions
 import numpy as np
 from pathlib import Path
 
-from easim.core.video_recorder import VideoRecorder
+from easim.utils.video_recorder import VideoRecorder
 from easim.utils.constants import OUTPUT_DIR
 
 
