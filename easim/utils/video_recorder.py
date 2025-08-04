@@ -1,12 +1,15 @@
 """Video recording functionality for habitat-lab framework"""
 import cv2
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Dict, TYPE_CHECKING
 from pathlib import Path
 
 from easim.utils.constants import (
-    DEFAULT_FPS, DEFAULT_VIDEO_RESOLUTION, DEFAULT_VIDEO_CODEC
+    DEFAULT_FPS, DEFAULT_VIDEO_RESOLUTION, DEFAULT_VIDEO_CODEC, VIDEO_DIR
 )
+
+if TYPE_CHECKING:
+    from habitat import Agent
 
 
 class VideoRecorder:
@@ -77,3 +80,72 @@ class VideoRecorder:
         for i, frame in enumerate(self.frames):
             frame_path = output_path / f"frame_{i:04d}.png"
             cv2.imwrite(str(frame_path), frame)
+
+    @staticmethod
+    def setup_video_directory(task_name: str) -> Path:
+        """
+        Set up video recording directory structure.
+        
+        :param task_name: Name of the task/benchmark for directory naming.
+        :return: Path to the video directory for this evaluation run.
+        """
+        # Find next incremental number for this agent-task combination
+        base_dir = VIDEO_DIR / f"{task_name}"
+        run_number = 1
+        while (base_dir / f"run_{run_number:03d}").exists():
+            run_number += 1
+        
+        video_dir = base_dir / f"run_{run_number:03d}"
+        video_dir.mkdir(parents=True, exist_ok=True)
+        return video_dir
+
+    @staticmethod
+    def record_episode_with_video(env, agent: "Agent", episode_num: int, video_dir: Path) -> Dict:
+        """
+        Record a single episode with video recording.
+        
+        :param env: The habitat environment.
+        :param agent: The agent to evaluate.
+        :param episode_num: Episode number for naming the video file.
+        :param video_dir: Directory to save the video file.
+        :return: Dictionary containing episode metrics.
+        """
+        observations = env.reset()
+        agent.reset()
+        
+        # Initialize video recorder for this episode
+        video_path = video_dir / f"episode_{episode_num + 1:03d}.mp4"
+        video_recorder = VideoRecorder(str(video_path))
+        video_recorder.start_recording()
+        
+        try:
+            while not env.episode_over:
+                # Record frame if RGB observations are available
+                if "rgb" in observations:
+                    video_recorder.add_frame(observations["rgb"])
+                
+                action = agent.act(observations)
+                observations = env.step(action)
+        finally:
+            # Ensure video recording stops even if an error occurs
+            video_recorder.stop_recording()
+        
+        return env.get_metrics()
+
+    @staticmethod
+    def record_episode_no_video(env, agent: "Agent") -> Dict:
+        """
+        Record a single episode without video recording.
+        
+        :param env: The habitat environment.
+        :param agent: The agent to evaluate.
+        :return: Dictionary containing episode metrics.
+        """
+        observations = env.reset()
+        agent.reset()
+        
+        while not env.episode_over:
+            action = agent.act(observations)
+            observations = env.step(action)
+        
+        return env.get_metrics()
