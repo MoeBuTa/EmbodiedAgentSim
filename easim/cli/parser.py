@@ -2,7 +2,7 @@
 Command line argument parser for EmbodiedAgentSim
 """
 import argparse
-from easim.utils.constants import OUTPUT_DIR
+from easim.utils.constants import BENCHMARK_CONFIG
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -12,30 +12,55 @@ def create_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Test basic habitat-lab setup
-  easim test --dataset MP3D
+  # Run interactive navigation demo
+  easim interactive
 
-  # Record random navigation video
-  easim record --dataset HM3D --output-dir videos
+  # List all available benchmark tasks
+  easim list-tasks
+
+  # Benchmark agent on ObjectNav HM3D
+  easim benchmark --task objectnav_hm3d --episodes 10
+
+  # Benchmark with video recording
+  easim benchmark --task pointnav_mp3d --episodes 5 --video
+
+  # Use different agent (when available)
+  easim benchmark --task imagenav_mp3d --agent llm --episodes 3
         """
     )
 
-    # Add subcommands instead of mode
+    # Add subcommands
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
 
-    # Test command
-    test_parser = subparsers.add_parser('test', help='Test basic habitat-lab setup')
-    test_parser.add_argument('--dataset', choices=['MP3D', 'HM3D'], default='MP3D')
-    test_parser.add_argument('--scene-path', help='Custom scene path')
+    # Interactive command
+    interactive_parser = subparsers.add_parser('interactive', help='Run interactive navigation demo')
 
-    # Record command
-    record_parser = subparsers.add_parser('record', help='Record navigation video')
-    record_parser.add_argument('--dataset', choices=['MP3D', 'HM3D'], default='MP3D')
-    record_parser.add_argument('--scene-path', help='Custom scene path')
-    record_parser.add_argument('--output-dir', default=str(OUTPUT_DIR), help='Output directory')
-    record_parser.add_argument('--video-name', default='simulation.mp4', help='Video filename')
-    record_parser.add_argument('--max-steps', type=int, default=100, help='Max navigation steps')
-    record_parser.add_argument('--fps', type=int, default=30, help='Video FPS')
-    record_parser.add_argument('--save-frames', action='store_true', help='Save individual frames')
+    # List tasks command
+    list_tasks_parser = subparsers.add_parser('list-tasks', help='List available benchmark tasks')
+
+    # Benchmark command
+    benchmark_parser = subparsers.add_parser('benchmark', help='Run agent benchmarking')
+    benchmark_parser.add_argument(
+        '--task', 
+        choices=list(BENCHMARK_CONFIG.keys()), 
+        default='objectnav_hm3d',
+        help='Benchmark task to run'
+    )
+    benchmark_parser.add_argument(
+        '--episodes', 
+        type=int, 
+        default=10, 
+        help='Number of episodes to run'
+    )
+    benchmark_parser.add_argument(
+        '--video', 
+        action='store_true', 
+        help='Record videos of episodes'
+    )
+    benchmark_parser.add_argument(
+        '--agent', 
+        default='sample', 
+        help='Agent type to use for benchmarking'
+    )
 
     return parser

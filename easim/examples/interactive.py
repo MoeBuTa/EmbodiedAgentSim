@@ -18,7 +18,8 @@ def transform_rgb_bgr(image):
     return image[:, :, [2, 1, 0]]
 
 
-def example():
+def interactive():
+    action = None
     env = habitat.Env(
         config=habitat.get_config("benchmark/nav/pointnav/pointnav_habitat_test.yaml")
     )
@@ -73,4 +74,4 @@ def example():
 
 
 if __name__ == "__main__":
-    example()
+    interactive()
