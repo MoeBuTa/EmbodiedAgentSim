@@ -4,7 +4,7 @@ from easim.agents.base import BaseLLMAgent
 from easim.agents.prompt.objectnav import ObjectNavPrompts
 
 
-class ObjectnavAgent(BaseLLMAgent):
+class ObjectNavAgent(BaseLLMAgent):
     """LLM agent using OpenAI's API."""
 
     def __init__(self, config: Dict[str, Any]):

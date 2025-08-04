@@ -3,9 +3,9 @@ import traceback
 
 from easim.agents.sample import SampleAgent
 from easim.benchmark.benchmark import HabitatBenchmark
-from easim.utils.constants import BENCHMARK_CONFIG
+from easim.utils.constants import BENCHMARK_CONFIG, AGENT_LIST
 
-from easim.examples.interactive import interactive
+from easim.demo.interactive import interactive
 from easim.utils.habitat_utils import setup_habitat_lab_env
 
 # Set up habitat-lab environment
@@ -75,7 +75,7 @@ def benchmark(args):
     print("-" * 30)
     
     # Initialize agent (currently only SampleAgent is available)
-    if args.agent == 'sample':
+    if args.agent == 'sample' or args.agent not in AGENT_LIST:
         agent = SampleAgent()
     else:
         print(f"Warning: Agent '{args.agent}' not implemented, using SampleAgent")

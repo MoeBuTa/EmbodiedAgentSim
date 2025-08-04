@@ -106,3 +106,24 @@ BENCHMARK_CONFIG = {
 DEFAULT_FPS = 30
 DEFAULT_VIDEO_RESOLUTION = (640, 480)
 DEFAULT_VIDEO_CODEC = 'mp4v'
+
+
+
+# ============================================================================
+# AGENT SETTINGS
+# ============================================================================
+
+AGENT_LIST = {
+    "sample": {
+        "type": "SampleAgent",
+        "description": "A sample agent that performs random actions in the environment."
+    },
+    "objectnav": {
+        "type": "ObjectNavAgent",
+        "description": "An agent designed for object navigation tasks, using LLMs to generate navigation prompts."
+    },
+    "eqa": {
+        "type": "EQAAgent",
+        "description": "An agent for embodied question answering tasks, leveraging LLMs for understanding and navigation."
+    },
+}
