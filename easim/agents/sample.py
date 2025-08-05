@@ -7,5 +7,5 @@ class SampleAgent(habitat.Agent):
         pass
 
     def act(self, observations):
-        action = HabitatSimActions.move_forward
+        action = HabitatSimActions.turn_left  # Example action, can be changed to any valid action
         return {"action": action}

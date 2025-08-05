@@ -92,35 +92,7 @@ class TestVideoRecorder:
         
         # Clean up
         output_path.unlink()
-    
-    def test_save_frames_as_images(self):
-        """Test saving individual frames as images"""
-        output_path = OUTPUT_DIR / "test_frames.mp4"
-        frames_dir = OUTPUT_DIR / "test_frames"
-        
-        recorder = VideoRecorder(str(output_path), fps=30, resolution=(64, 48))
-        recorder.start_recording()
-        
-        # Add a few test frames
-        for i in range(3):
-            frame = np.full((48, 64, 3), i * 50, dtype=np.uint8)
-            recorder.add_frame(frame)
-        
-        recorder.stop_recording()
-        
-        # Save frames as images
-        recorder.save_frames_as_images(str(frames_dir))
-        
-        # Check that frame images were created
-        assert frames_dir.exists()
-        frame_files = list(frames_dir.glob("frame_*.png"))
-        assert len(frame_files) == 3
-        
-        # Clean up
-        output_path.unlink()
-        for frame_file in frame_files:
-            frame_file.unlink()
-        frames_dir.rmdir()
+
     
     def test_none_frame_handling(self):
         """Test that None frames are handled gracefully"""

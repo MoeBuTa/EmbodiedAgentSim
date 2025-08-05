@@ -21,6 +21,10 @@ VIDEO_DIR = OUTPUT_DIR / "videos"
 # Create video directory if it doesn't exist
 VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 
+IMAGE_DIR = OUTPUT_DIR / "images"
+# Create image directory if it doesn't exist
+IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+
 
 # ============================================================================
 # BENCHMARK SETTINGS
