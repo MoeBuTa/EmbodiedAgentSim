@@ -2,25 +2,25 @@ import openai
 import numpy as np
 from typing import Dict, Any
 from easim.agents.base import BaseLLMAgent
-from easim.agents.prompt.objectnav import ObjectNavPrompts
+from easim.agents.prompt.eqa import EQAPrompts
 from habitat.sims.habitat_simulator.actions import HabitatSimActions
 
 
-class ObjectNavAgent(BaseLLMAgent):
-    """LLM-based ObjectNav agent using actual observations."""
+class EQAAgent(BaseLLMAgent):
+    """LLM-based EQA agent using actual observations."""
 
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
-        self.prompts = ObjectNavPrompts()
+        self.prompts = EQAPrompts()
 
     def process_observations(self, obs) -> Dict[str, Any]:
         """Process raw observations from Habitat environment."""
         processed = {}
         
-        # Get target object from objectgoal observation
-        processed['target_object'] = str(obs.get('objectgoal', 'unknown'))
+        # Get question tokens (always available in EQA)
+        processed['question_tokens'] = obs.get('question', [])
         
-        # Get spatial information  
+        # Get spatial information
         processed['heading'] = float(obs['compass'][0]) if 'compass' in obs else None
         processed['position'] = obs['gps'].tolist() if 'gps' in obs else None
             
@@ -28,10 +28,11 @@ class ObjectNavAgent(BaseLLMAgent):
 
     def generate_prompt(self, processed_obs: Dict[str, Any]) -> str:
         """Generate task-specific prompt."""
-        return self.prompts.generate_navigation_prompt(
-            target_object=processed_obs.get('target_object', 'unknown'),
+        return self.prompts.generate_eqa_prompt(
+            question_tokens=processed_obs.get('question_tokens', []),
             scene_description=processed_obs.get('visual_description', ''),
             detected_objects=processed_obs.get('detected_objects', []),
+            scene_analysis=processed_obs.get('scene_analysis', ''),
             action_history=self.action_history[-5:],  # Last 5 actions
             position=processed_obs.get('position'),
             heading=processed_obs.get('heading')
@@ -41,13 +42,30 @@ class ObjectNavAgent(BaseLLMAgent):
         """Parse LLM response into Habitat action."""
         response = llm_response.strip().upper()
         
+        # Check if agent wants to answer
+        if "ANSWER:" in response or "ANSWER " in response or response.startswith("ANSWER"):
+            # Extract answer text (simplified - assumes single word answers)
+            answer_text = response.split("ANSWER")[-1].strip(": ")
+            
+            # Map common answers to answer IDs (simplified)
+            answer_map = {
+                "RED": 0, "BLUE": 1, "GREEN": 2, "YELLOW": 3, "WHITE": 4, "BLACK": 5,
+                "BROWN": 6, "PURPLE": 7, "ORANGE": 8, "PINK": 9
+            }
+            
+            answer_id = answer_map.get(answer_text.split()[0], 0)
+            return {
+                "action": "answer",
+                "action_args": {"answer_id": answer_id}
+            }
+        
+        # Navigation actions
         action_map = {
             'MOVE_FORWARD': HabitatSimActions.move_forward,
             'TURN_LEFT': HabitatSimActions.turn_left, 
             'TURN_RIGHT': HabitatSimActions.turn_right,
             'LOOK_UP': HabitatSimActions.look_up,
-            'LOOK_DOWN': HabitatSimActions.look_down,
-            'STOP': HabitatSimActions.stop
+            'LOOK_DOWN': HabitatSimActions.look_down
         }
         
         # Find matching action in response

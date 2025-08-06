@@ -90,18 +90,11 @@ def benchmark(args):
     
     # Run evaluation
     print(f"Starting evaluation...")
-    if "eqa" in args.task:
-        metrics = habitat_benchmark.evaluate_eqa(
-            agent, 
-            num_episodes=args.episodes, 
-            record_video=args.video
-        )
-    else:
-        metrics = habitat_benchmark.evaluate_objectnav(
-            agent, 
-            num_episodes=args.episodes, 
-            record_video=args.video
-        )
+    metrics = habitat_benchmark.evaluate(
+        agent, 
+        num_episodes=args.episodes, 
+        record_video=args.video
+    )
     
     # Display results
     print("\nBenchmark Results:")

@@ -27,16 +27,14 @@ Always respond with exactly one action name. Think step by step about:
         prompt = f"""
 TARGET: Find a {target_object}
 
-CURRENT SCENE: {scene_description}
-
-DETECTED OBJECTS: {', '.join(detected_objects) if detected_objects else 'None visible'}
-
 RECENT ACTIONS: {' -> '.join(action_history[-3:]) if action_history else 'None'}
 
 POSITION: {position if position else 'Unknown'}
 HEADING: {heading if heading else 'Unknown'}
 
-What action should you take next to find the {target_object}?
+Look at the current scene in the image. Can you see a {target_object}? 
+If yes, respond with: STOP
+If no, what action should you take next to find the {target_object}?
 Respond with exactly one action: MOVE_FORWARD, TURN_LEFT, TURN_RIGHT, LOOK_UP, LOOK_DOWN, or STOP
 """
         return prompt

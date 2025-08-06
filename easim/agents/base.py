@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 import numpy as np
 import openai
+import base64
+import cv2
 
 from easim.agents.prompt.base import BasePrompts
 from habitat.core.agent import Agent
@@ -35,8 +37,12 @@ class BaseLLMAgent(Agent, ABC):
         # Generate LLM prompt
         prompt = self.generate_prompt(processed_obs)
 
+        # Encode RGB image for vision models
+        rgb_image = observations.get('rgb')
+        image_data = self._encode_rgb_image(rgb_image) if rgb_image is not None else None
+
         # Get LLM response
-        llm_response = self.query_llm(prompt)
+        llm_response = self.query_llm(prompt, image_data)
 
         # Parse response to action
         action = self.parse_action(llm_response)
@@ -47,17 +53,38 @@ class BaseLLMAgent(Agent, ABC):
         self.spatial_memory.update(processed_obs.get('spatial_memory', {}))
 
         return action
+    
+    def _encode_rgb_image(self, rgb_array: np.ndarray) -> str:
+        """Convert RGB numpy array to base64 encoded JPEG."""
+        # Convert RGB to BGR for OpenCV
+        bgr_array = cv2.cvtColor(rgb_array, cv2.COLOR_RGB2BGR)
+        
+        # Encode to JPEG with good quality
+        _, buffer = cv2.imencode('.jpg', bgr_array, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        
+        # Convert to base64
+        return base64.b64encode(buffer).decode('utf-8')
 
-    def query_llm(self, prompt: str) -> str:
-        """Query the LLM with given prompt."""
-        """Query OpenAI API."""
+    def query_llm(self, prompt: str, image_data: str = None) -> str:
+        """Query the LLM with given prompt and optional image."""
         try:
+            messages = [{"role": "system", "content": self.prompts.system_prompt}]
+            
+            if image_data:
+                # For vision models like GPT-4V
+                messages.append({
+                    "role": "user", 
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
+                    ]
+                })
+            else:
+                messages.append({"role": "user", "content": prompt})
+            
             response = openai.ChatCompletion.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": self.prompts.system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
+                messages=messages,
                 max_tokens=150,
                 temperature=0.1
             )
