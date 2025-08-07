@@ -25,6 +25,10 @@ IMAGE_DIR = OUTPUT_DIR / "images"
 # Create image directory if it doesn't exist
 IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
+EVALUATION_DIR = OUTPUT_DIR / "evaluations"
+# Create evaluation directory if it doesn't exist
+EVALUATION_DIR.mkdir(parents=True, exist_ok=True)
+
 
 # ============================================================================
 # BENCHMARK SETTINGS

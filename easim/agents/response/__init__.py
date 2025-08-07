@@ -1,0 +1,1 @@
+# Response format definitions for LLM agents

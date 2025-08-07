@@ -12,6 +12,27 @@ from easim.utils.constants import (
 from habitat import Agent
 
 
+def get_episode_filename(episode_num: int, scene_id: str) -> str:
+    """
+    Generate episode filename with incremental number and scene identifier.
+    
+    :param episode_num: Episode number (0-based, will be converted to 1-based)
+    :param scene_id: Scene ID path from the episode
+    :return: Filename string like "episode_1_00800-TEEsavR23oF"
+    """
+    # Extract scene identifier from path
+    if '/' in scene_id:
+        # Extract folder name which contains the scene identifier
+        # e.g., "hm3d_v0.2/minival/00800-TEEsavR23oF/TEEsavR23oF.basis.glb" -> "00800-TEEsavR23oF"
+        scene_identifier = scene_id.split('/')[-2]
+    else:
+        # Fallback for direct scene names
+        scene_identifier = scene_id.split('.')[0]
+    
+    # Use episode_num + 1 for incremental naming (episode_1, episode_2, etc.)
+    return f"episode_{episode_num + 1}_{scene_identifier}"
+
+
 class VideoRecorder:
     """Records simulation videos from RGB, depth, and semantic observations"""
 
@@ -79,12 +100,12 @@ class VideoRecorder:
     
     def _save_image(self, frame: np.ndarray, obs_type: str):
         """Save frame as image"""
-        # Extract task_name, run_number, episode_number from output_path
-        # Path structure: data/output/videos/task_name/run_XXX/episode_XXX.mp4
+        # Extract task_name, run_number, episode_id from output_path
+        # Path structure: data/output/videos/task_name/run_XXX/episode_{episode_id}.mp4
         path_parts = self.output_path.parts
         task_name = path_parts[-3]  # task_name
         run_number = path_parts[-2]  # run_XXX
-        episode_name = self.output_path.stem  # episode_XXX
+        episode_name = self.output_path.stem  # episode_{episode_id}
 
         images_dir = IMAGE_DIR / task_name / run_number / episode_name
         images_dir.mkdir(parents=True, exist_ok=True)
@@ -130,13 +151,17 @@ class VideoRecorder:
         :param video_dir: Directory to save the video file.
         :return: Dictionary containing episode metrics.
         """
+        # Reset environment to get next episode from the dataset
+        # Habitat automatically advances to the next episode via EpisodeIterator
         observations = env.reset()
         agent.reset()
 
         available_obs_types = [obs_type for obs_type in ["rgb", "depth", "semantic"] if obs_type in observations]
 
         # Initialize video recorder for this episode
-        video_path = video_dir / f"episode_{episode_num + 1:03d}.mp4"
+        # Get episode info after reset to ensure we have the current episode
+        episode_filename = get_episode_filename(episode_num, env.current_episode.scene_id)
+        video_path = video_dir / f"{episode_filename}.mp4"
         video_recorder = VideoRecorder(video_path)
         video_recorder.start_recording(available_obs_types)
 

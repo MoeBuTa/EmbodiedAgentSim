@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Optional, Dict
 from easim.utils.constants import BENCHMARK_CONFIG
+from easim.utils.habitat_utils import save_evaluation_results
 from habitat import Benchmark, Agent
 from tqdm import tqdm
 from easim.recorders.video_recorder import VideoRecorder
@@ -81,4 +82,8 @@ class HabitatBenchmark(Benchmark):
 
         pbar.close()
         avg_metrics = {k: v / count_episodes for k, v in agg_metrics.items()}
+        
+        # Save evaluation results to CSV
+        save_evaluation_results(self.task_name, avg_metrics, num_episodes)
+        
         return avg_metrics

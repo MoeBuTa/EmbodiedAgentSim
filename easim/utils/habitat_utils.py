@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
+import pandas as pd
+from datetime import datetime
+from easim.utils.constants import EVALUATION_DIR
 
 
 def setup_habitat_lab_env() -> str:
@@ -53,3 +56,33 @@ def get_config_path(config_name: str) -> str:
         raise FileNotFoundError(f"Config file not found: {config_path}")
     
     return str(config_path)
+
+
+def save_evaluation_results(task_name: str, metrics: Dict[str, float], num_episodes: int) -> None:
+    """
+    Save evaluation results to a CSV file.
+    
+    :param task_name: Name of the task being evaluated
+    :param metrics: Dictionary of evaluation metrics
+    :param num_episodes: Number of episodes evaluated
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"evaluation_{task_name}_{timestamp}.csv"
+    filepath = EVALUATION_DIR / filename
+    
+    # Prepare data for CSV
+    data = {
+        'task_name': [task_name],
+        'num_episodes': [num_episodes],
+        'timestamp': [timestamp]
+    }
+    
+    # Add all metrics as columns
+    for metric_name, metric_value in metrics.items():
+        data[metric_name] = [metric_value]
+    
+    # Create DataFrame and save to CSV
+    df = pd.DataFrame(data)
+    df.to_csv(filepath, index=False)
+    
+    print(f"Evaluation results saved to: {filepath}")
