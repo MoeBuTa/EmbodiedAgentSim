@@ -119,8 +119,6 @@ class VideoRecorder:
             writer.release()
         self.writers.clear()
 
-        if "rgb" in self.frames:
-            print(f"RGB video saved to: {self.output_path}")
 
     @staticmethod
     def setup_video_directory(task_name: str) -> Path:

@@ -90,19 +90,12 @@ def benchmark(args):
     
     # Run evaluation
     print(f"Starting evaluation...")
-    metrics = habitat_benchmark.evaluate(
+    habitat_benchmark.evaluate(
         agent, 
         num_episodes=args.episodes, 
         record_video=args.video
     )
-    
-    # Display results
-    print("\nBenchmark Results:")
-    print("=" * 40)
-    for k, v in metrics.items():
-        print("{}: {:.3f}".format(k, v))
-    
-    if args.video:
-        print(f"\nVideos saved in: data/output/videos/{args.task}/")
+
+
     
     return 0

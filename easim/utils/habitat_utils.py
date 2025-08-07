@@ -58,21 +58,25 @@ def get_config_path(config_name: str) -> str:
     return str(config_path)
 
 
-def save_evaluation_results(task_name: str, metrics: Dict[str, float], num_episodes: int) -> None:
+def save_evaluation_results(task_name: str, metrics: Dict[str, float], num_episodes: int, agent_name: str = "unknown", agent_model: str = "unknown") -> None:
     """
-    Save evaluation results to a CSV file.
+    Append evaluation results to a consolidated CSV file.
     
     :param task_name: Name of the task being evaluated
     :param metrics: Dictionary of evaluation metrics
     :param num_episodes: Number of episodes evaluated
+    :param agent_name: Name/type of the agent being evaluated
+    :param agent_model: Model used by the agent (e.g., gpt-4o-mini)
     """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"evaluation_{task_name}_{timestamp}.csv"
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    filename = "evaluation_results.csv"
     filepath = EVALUATION_DIR / filename
     
     # Prepare data for CSV
     data = {
         'task_name': [task_name],
+        'agent_name': [agent_name],
+        'agent_model': [agent_model],
         'num_episodes': [num_episodes],
         'timestamp': [timestamp]
     }
@@ -81,8 +85,16 @@ def save_evaluation_results(task_name: str, metrics: Dict[str, float], num_episo
     for metric_name, metric_value in metrics.items():
         data[metric_name] = [metric_value]
     
-    # Create DataFrame and save to CSV
-    df = pd.DataFrame(data)
-    df.to_csv(filepath, index=False)
+    # Create DataFrame for new row
+    new_row = pd.DataFrame(data)
     
-    print(f"Evaluation results saved to: {filepath}")
+    # Check if file exists and append or create
+    if filepath.exists():
+        # Read existing data to get all columns
+        existing_df = pd.read_csv(filepath)
+        # Combine with new row, filling missing columns with NaN
+        combined_df = pd.concat([existing_df, new_row], ignore_index=True, sort=False)
+        combined_df.to_csv(filepath, index=False)
+    else:
+        # Create new file
+        new_row.to_csv(filepath, index=False)

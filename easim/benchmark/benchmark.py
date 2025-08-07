@@ -83,7 +83,11 @@ class HabitatBenchmark(Benchmark):
         pbar.close()
         avg_metrics = {k: v / count_episodes for k, v in agg_metrics.items()}
         
+        # Extract agent information
+        agent_name = getattr(agent, '__class__', type(agent)).__name__
+        agent_model = getattr(agent, 'model', 'unknown')
+        
         # Save evaluation results to CSV
-        save_evaluation_results(self.task_name, avg_metrics, num_episodes)
+        save_evaluation_results(self.task_name, avg_metrics, num_episodes, agent_name, agent_model)
         
         return avg_metrics
