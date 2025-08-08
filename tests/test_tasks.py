@@ -15,7 +15,7 @@ from habitat.sims.habitat_simulator.actions import HabitatSimActions
 import numpy as np
 
 from easim.tasks import BaseEmbodiedTask, ObjectNavTask
-from easim.utils.video_recorder import VideoRecorder
+from easim.recorders.video import VideoRecorder
 from easim.utils.constants import OUTPUT_DIR
 
 
@@ -173,8 +173,8 @@ class TestVideoRecorderIntegration:
         task = ObjectNavTask(dataset="HM3D", max_steps=10)
         
         video_path = OUTPUT_DIR / "test_recording.mp4"
-        recorder = VideoRecorder(str(video_path), fps=30)
-        recorder.start_recording()
+        recorder = VideoRecorder(fps=30)
+        recorder.start_recording(str(video_path))
         
         try:
             observations = task.reset()

@@ -69,21 +69,16 @@ def list_tasks():
 def benchmark(args):
     """Run benchmark evaluation"""
     print(f"Task: {args.task}")
-    print(f"Episodes: {args.episodes}")
+    print(f"Episodes: {args.episodes if args.episodes is not None else 'all'}")
     print(f"Agent: {args.agent}")
     print(f"Record video: {args.video}")
     print("-" * 30)
     
-    # Initialize agent (currently only SampleAgent is available)
-    if args.agent == 'sample' or args.agent not in AGENT_LIST:
-        agent = SampleAgent()
-    else:
-        print(f"Warning: Agent '{args.agent}' not implemented, using SampleAgent")
-        agent = SampleAgent()
+
     
     # Initialize benchmark
     try:
-        habitat_benchmark = HabitatBenchmark(args.task)
+        habitat_benchmark = HabitatBenchmark(task_name=args.task, agent=args.agent)
     except KeyError:
         print(f"Error: Task '{args.task}' not found in benchmark configurations")
         return 1
@@ -91,7 +86,6 @@ def benchmark(args):
     # Run evaluation
     print(f"Starting evaluation...")
     habitat_benchmark.evaluate(
-        agent, 
         num_episodes=args.episodes, 
         record_video=args.video
     )

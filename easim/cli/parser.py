@@ -49,13 +49,13 @@ Examples:
     benchmark_parser.add_argument(
         '--episodes', 
         type=int, 
-        default=10, 
-        help='Number of episodes to run'
+        default=None, 
+        help='Number of episodes to run (default: run all available episodes)'
     )
     benchmark_parser.add_argument(
-        '--video', 
+        '--record',
         action='store_true', 
-        help='Record videos of episodes'
+        help='Record videos, images of episodes'
     )
     benchmark_parser.add_argument(
         '--agent', 
