@@ -35,22 +35,17 @@ easim list-tasks
 
 ### Run Benchmarks
 ```bash
-# Basic benchmark evaluation
+# Object Navigation
 easim benchmark --task objectnav_hm3d --episodes 10
+easim benchmark --task objectnav_mp3d --episodes 10 --record
 
-# With video recording
-easim benchmark --task pointnav_mp3d --episodes 5 --video
+# Embodied Question Answering
+easim benchmark --task eqa_hm3d --episodes 10
+easim benchmark --task eqa_rgbonly_hm3d --episodes 5 --record
 
-# Different navigation tasks
-easim benchmark --task imagenav_gibson --episodes 3
-easim benchmark --task instance_imagenav_hm3d_v2 --episodes 5
-
-# Rearrangement tasks
-easim benchmark --task rearrange_multi_task --episodes 3
-easim benchmark --task skill_pick --episodes 10
-
-# Multi-agent scenarios
-easim benchmark --task multi_agent_tidy_house --episodes 2 --video
+# Express-Bench (Rich trajectory data - 2044 episodes)
+easim benchmark --task eqa_hm3d_express --episodes 20 --record
+easim benchmark --task eqa_rgbonly_hm3d_express --episodes 15
 ```
 
 ### Interactive Demo
@@ -61,22 +56,19 @@ easim interactive
 
 ## 📋 Available Benchmark Categories
 
-### Navigation Tasks
-- **Object Navigation**: `objectnav_hm3d`, `objectnav_mp3d`, `objectnav_hssd_hab`
-- **Point Navigation**: `pointnav_hm3d`, `pointnav_mp3d`, `pointnav_gibson`
-- **Image Navigation**: `imagenav_mp3d`, `imagenav_gibson`
-- **Instance Image Navigation**: `instance_imagenav_hm3d_v1`, `instance_imagenav_hm3d_v2`
-- **VLN**: `vln_r2r`, `eqa_mp3d`
+### Tuned and Ready Tasks
 
-### Rearrangement Tasks
-- **Skills**: `skill_pick`, `skill_place`, `skill_nav_to_obj`, `skill_open_fridge`
-- **Multi-Task**: `rearrange_multi_task`, `set_table`, `prepare_groceries`, `tidy_house`
-- **HAB3 Benchmarks**: `hab3_bench_single_agent`, `hab3_bench_multi_agent`
-- **Play Scenarios**: `play_human`, `play_spot`, `play_stretch`
+#### Object Navigation
+- **ObjectNav HM3D**: `objectnav_hm3d`, `objectnav_hm3d_with_semantic`
+- **ObjectNav MP3D**: `objectnav_mp3d`, `objectnav_mp3d_with_semantic`
 
-### Multi-Agent Tasks
-- **Social Navigation**: `multi_agent_social_nav`, `multi_agent_hssd_spot_human`
-- **Collaborative**: `multi_agent_tidy_house`
+#### Embodied Question Answering
+- **Standard EQA**: `eqa_hm3d`, `eqa_rgbonly_hm3d` (500 episodes)
+- **Express-Bench**: `eqa_hm3d_express`, `eqa_rgbonly_hm3d_express` (2044 episodes with rich trajectory data)
+
+### Additional Available Tasks (Not Yet Tuned)
+- Point Navigation, Image Navigation, VLN, Rearrangement, Multi-Agent tasks
+- Use `easim list-tasks` to see all 58+ available benchmarks
 
 ## 🛠 Python API
 
@@ -172,7 +164,7 @@ EmbodiedAgentSim/
 |--------|-------------|---------|---------|
 | `--task` | Benchmark task to run | `objectnav_hm3d` | `--task pointnav_mp3d` |
 | `--episodes` | Number of episodes | `10` | `--episodes 5` |
-| `--video` | Enable video recording | `False` | `--video` |
+| `--record` | Enable video recording | `False` | `--record` |
 | `--agent` | Agent type | `sample` | `--agent custom` |
 
 ## 📊 Output and Results
@@ -185,7 +177,7 @@ Results include standard Habitat-Lab metrics:
 - **Episode Length**: Steps taken per episode
 
 ### Video Output
-When `--video` is enabled:
+When `--record` is enabled:
 - Videos saved to: `data/output/videos/{task_name}/run_001/`
 - Format: `episode_001.mp4`, `episode_002.mp4`, etc.
 - Automatic run numbering prevents overwrites
@@ -204,9 +196,9 @@ for task, config_path in BENCHMARK_CONFIG.items():
 
 ### Batch Evaluation
 ```bash
-# Run multiple tasks
-for task in objectnav_hm3d pointnav_mp3d imagenav_gibson; do
-    easim benchmark --task $task --episodes 10 --video
+# Run multiple ObjectNav and EQA tasks
+for task in objectnav_hm3d objectnav_mp3d eqa_hm3d eqa_hm3d_express; do
+    easim benchmark --task $task --episodes 10 --record
 done
 ```
 

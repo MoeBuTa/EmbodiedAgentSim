@@ -62,6 +62,10 @@ BENCHMARK_CONFIG = {
     
     "eqa_mp3d": "benchmark/nav/eqa_mp3d.yaml",
     "eqa_rgbonly_mp3d": "benchmark/nav/eqa_rgbonly_mp3d.yaml",
+    "eqa_hm3d": "benchmark/nav/eqa/eqa_hm3d.yaml",
+    "eqa_rgbonly_hm3d": "benchmark/nav/eqa/eqa_rgbonly_hm3d.yaml",
+    "eqa_hm3d_express": "benchmark/nav/eqa/eqa_hm3d_express.yaml",
+    "eqa_rgbonly_hm3d_express": "benchmark/nav/eqa/eqa_rgbonly_hm3d_express.yaml",
     "vln_r2r": "benchmark/nav/vln_r2r.yaml",
     
     # Rearrange benchmarks

@@ -22,7 +22,7 @@ Examples:
   easim benchmark --task objectnav_hm3d --episodes 10
 
   # Benchmark with video recording
-  easim benchmark --task pointnav_mp3d --episodes 5 --video
+  easim benchmark --task pointnav_mp3d --episodes 5 --record
 
   # Use different agent (when available)
   easim benchmark --task imagenav_mp3d --agent llm --episodes 3

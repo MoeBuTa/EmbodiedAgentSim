@@ -71,7 +71,7 @@ def benchmark(args):
     print(f"Task: {args.task}")
     print(f"Episodes: {args.episodes if args.episodes is not None else 'all'}")
     print(f"Agent: {args.agent}")
-    print(f"Record video: {args.video}")
+    print(f"Record video: {args.record}")
     print("-" * 30)
     
 
@@ -87,7 +87,7 @@ def benchmark(args):
     print(f"Starting evaluation...")
     habitat_benchmark.evaluate(
         num_episodes=args.episodes, 
-        record_video=args.video
+        enable_record=args.record
     )
 
 
