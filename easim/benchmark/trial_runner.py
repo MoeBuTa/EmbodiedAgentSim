@@ -30,8 +30,8 @@ class TrialRunner:
         while (base_dir / f"run_{run_number:03d}").exists():
             run_number += 1
 
-        video_dir = base_dir / f"run_{run_number:03d}"
-        video_dir.mkdir(parents=True, exist_ok=True)
+        # Generate run and episode names for proper directory structure
+        run_name = f"run_{run_number:03d}"
         
         # Generate episode filename with incremental number and scene identifier
         if '/' in scene_id:
@@ -43,13 +43,15 @@ class TrialRunner:
             scene_identifier = scene_id.split('.')[0]
 
         # Use episode_num + 1 for incremental naming (episode_1, episode_2, etc.)
-        episode_filename = f"episode_{episode_num + 1}_{scene_identifier}"
-        video_path = video_dir / f"{episode_filename}.mp4"
+        episode_name = f"episode_{episode_num + 1}_{scene_identifier}"
+        
+        # Setup recording with new directory structure
+        self.video_recorder.set_run_and_episode(run_name, episode_name)
+        self.image_recorder.set_run_and_episode(run_name, episode_name)
         
         # Start recording
         if "rgb" in observations:
-            self.video_recorder.start_recording(str(video_path))
-        self.image_recorder.set_output_path(video_path)
+            self.video_recorder.start_recording()
         self.image_recorder.reset()
 
     def _run_trial_with_recording(self, env, agent: "Agent", episode_num: int, task_name: str) -> Optional[Any]:

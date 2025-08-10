@@ -17,12 +17,33 @@ class VideoRecorder:
         self.resolution = resolution
         self.writer = None
         self.frames = []
+        self.run_name = None
+        self.episode_name = None
+        self.output_path = None
 
-    def start_recording(self, output_path: str):
+    def set_run_and_episode(self, run_name: str, episode_name: str):
+        """Set run and episode names for proper directory structure"""
+        self.run_name = run_name
+        self.episode_name = episode_name
+        
+    def start_recording(self, output_path: str = None):
         """Initialize video writer for RGB"""
+        from easim.utils.constants import VIDEO_DIR
+        
+        if self.run_name and self.episode_name:
+            # Create directory structure: videos/run_xxx/episode_xxx.mp4
+            video_dir = VIDEO_DIR / self.run_name
+            video_dir.mkdir(parents=True, exist_ok=True)
+            self.output_path = video_dir / f"{self.episode_name}.mp4"
+        else:
+            self.output_path = output_path
+            
+        if self.output_path is None:
+            return
+            
         fourcc = cv2.VideoWriter_fourcc(*DEFAULT_VIDEO_CODEC)
         self.writer = cv2.VideoWriter(
-            output_path,
+            str(self.output_path),
             fourcc,
             self.fps,
             self.resolution

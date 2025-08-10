@@ -12,10 +12,17 @@ class ImageRecorder:
     def __init__(self):
         self.frame_count = 0
         self.output_path = None
+        self.run_name = None
+        self.episode_name = None
 
     def set_output_path(self, output_path: Path):
         """Set the base output path for images"""
         self.output_path = output_path
+        
+    def set_run_and_episode(self, run_name: str, episode_name: str):
+        """Set run and episode names for proper directory structure"""
+        self.run_name = run_name
+        self.episode_name = episode_name
 
     def add_observations(self, observations: dict):
         """Add frames from observations and save as images"""
@@ -43,17 +50,11 @@ class ImageRecorder:
 
     def _save_image(self, frame: np.ndarray, obs_type: str):
         """Save frame as image"""
-        if self.output_path is None:
+        if self.run_name is None or self.episode_name is None:
             return
             
-        # Extract task_name, run_number, episode_id from output_path
-        # Path structure: data/output/videos/task_name/run_XXX/episode_{episode_id}.mp4
-        path_parts = self.output_path.parts
-        task_name = path_parts[-3]  # task_name
-        run_number = path_parts[-2]  # run_XXX
-        episode_name = self.output_path.stem  # episode_{episode_id}
-
-        images_dir = IMAGE_DIR / task_name / run_number / episode_name
+        # Create directory structure: images/run_xxx/episode_xxx/
+        images_dir = IMAGE_DIR / self.run_name / self.episode_name
         images_dir.mkdir(parents=True, exist_ok=True)
         image_path = images_dir / f"step_{self.frame_count:04d}_{obs_type}.jpg"
         Image.fromarray(frame.astype(np.uint8)).save(str(image_path))
