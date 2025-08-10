@@ -3,13 +3,10 @@ import traceback
 
 from easim.agents.sample import SampleAgent
 from easim.benchmark.benchmark import HabitatBenchmark
-from easim.utils.constants import BENCHMARK_CONFIG, AGENT_LIST
+from easim.utils.constants import BENCHMARK_CONFIG
 
 from easim.demo.interactive import interactive
-from easim.utils.habitat_utils import setup_habitat_lab_env
 
-# Set up habitat-lab environment
-setup_habitat_lab_env()
 
 
 

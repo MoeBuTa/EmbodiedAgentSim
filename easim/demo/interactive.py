@@ -1,8 +1,3 @@
-from easim.utils.habitat_utils import setup_habitat_lab_env
-
-# Set up habitat-lab environment
-setup_habitat_lab_env()
-
 import habitat
 from habitat.sims.habitat_simulator.actions import HabitatSimActions
 import cv2

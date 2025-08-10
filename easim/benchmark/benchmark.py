@@ -31,7 +31,7 @@ class HabitatBenchmark(Benchmark):
     def initialize_agent(agent: "Agent") -> "Agent":
         if agent not in AGENT_LIST:
             raise ValueError(f"Agent '{agent}' is not supported. Available agents: {list(AGENT_LIST.keys())}")
-        return AGENT_LIST[agent]()
+        return AGENT_LIST[agent]["type"]()
 
 
     def evaluate(self, num_episodes: Optional[int] = None, enable_record: bool = False) -> Dict[str, float]:

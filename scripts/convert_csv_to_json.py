@@ -18,7 +18,7 @@ def convert_csv_to_json():
     print("First few rows:")
     print(df.head(3))
     
-    # Convert to JSON format expected by Habitat
+    # Convert to JSON format expected by Habitat, preserving original CSV attributes
     episodes = []
     for idx, row in df.iterrows():
         # Parse choices (assuming it's a string representation of a list)
@@ -43,7 +43,12 @@ def convert_csv_to_json():
             },
             'start_position': [0.0, 0.0, 0.0],  # Default positions - update with actual data if available
             'start_rotation': [1.0, 0.0, 0.0, 0.0],
-            'shortest_paths': [{'action': 0, 'position': [0.0, 0.0, 0.0]}]  # Placeholder
+            # Preserve original CSV attributes
+            'scene': row['scene'],
+            'floor': int(row['floor']) if pd.notna(row['floor']) else None,
+            'choices': choices,
+            'question_formatted': row['question_formatted'],
+            'label': row['label']
         }
         episodes.append(episode)
         

@@ -5,6 +5,9 @@ import os
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
+from easim.agents.eqa import EQAAgent
+from easim.agents.objectnav import ObjectNavAgent
+from easim.agents.sample import SampleAgent
 
 # ============================================================================
 # PROJECT PATHS
@@ -60,8 +63,8 @@ BENCHMARK_CONFIG = {
     "instance_imagenav_hm3d_v1": "benchmark/nav/instance_imagenav/instance_imagenav_hm3d_v1.yaml",
     "instance_imagenav_hm3d_v2": "benchmark/nav/instance_imagenav/instance_imagenav_hm3d_v2.yaml",
     
-    "eqa_mp3d": "benchmark/nav/eqa_mp3d.yaml",
-    "eqa_rgbonly_mp3d": "benchmark/nav/eqa_rgbonly_mp3d.yaml",
+    "eqa_mp3d": "benchmark/nav/eqa/eqa_mp3d.yaml",
+    "eqa_rgbonly_mp3d": "benchmark/nav/eqa/eqa_rgbonly_mp3d.yaml",
     "eqa_hm3d": "benchmark/nav/eqa/eqa_hm3d.yaml",
     "eqa_rgbonly_hm3d": "benchmark/nav/eqa/eqa_rgbonly_hm3d.yaml",
     "eqa_hm3d_express": "benchmark/nav/eqa/eqa_hm3d_express.yaml",
@@ -127,15 +130,15 @@ DEFAULT_VIDEO_CODEC = 'mp4v'
 
 AGENT_LIST = {
     "sample": {
-        "type": "SampleAgent",
+        "type": SampleAgent,
         "description": "A sample agent that performs random actions in the environment."
     },
     "objectnav": {
-        "type": "ObjectNavAgent",
+        "type": ObjectNavAgent,
         "description": "An agent designed for object navigation tasks, using LLMs to generate navigation prompts."
     },
     "eqa": {
-        "type": "EQAAgent",
+        "type": EQAAgent,
         "description": "An agent for embodied question answering tasks, leveraging LLMs for understanding and navigation."
     },
 }

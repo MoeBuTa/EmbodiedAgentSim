@@ -36,7 +36,7 @@ class TrialRunner:
         # Generate episode filename with incremental number and scene identifier
         if '/' in scene_id:
             # Extract folder name which contains the scene identifier
-            # e.g., "hm3d_v0.2/minival/00800-TEEsavR23oF/TEEsavR23oF.basis.glb" -> "00800-TEEsavR23oF"
+            # e.g., "hm3d/minival/00800-TEEsavR23oF/TEEsavR23oF.basis.glb" -> "00800-TEEsavR23oF"
             scene_identifier = scene_id.split('/')[-2]
         else:
             # Fallback for direct scene names
