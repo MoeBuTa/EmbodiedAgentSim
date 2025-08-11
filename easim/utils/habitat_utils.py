@@ -1,11 +1,21 @@
-from typing import Optional, Dict
 import pandas as pd
 from datetime import datetime
-from easim.utils.constants import EVALUATION_DIR
+from easim.utils.constants import EVALUATION_DIR, CONFIG_DIR
+import threading
+
+from typing import Dict
+
+from habitat.config.default import register_configs, patch_config
 
 
+from hydra import compose, initialize_config_dir
+from omegaconf import DictConfig
 
-def save_evaluation_results(task_name: str, metrics: Dict[str, float], num_episodes: int, agent_name: str = "unknown", agent_model: str = "unknown") -> None:
+lock = threading.Lock()
+
+
+def save_evaluation_results(task_name: str, metrics: Dict[str, float], num_episodes: int, agent_name: str = "unknown",
+                            agent_model: str = "unknown") -> None:
     """
     Append evaluation results to a consolidated CSV file.
     
@@ -18,7 +28,7 @@ def save_evaluation_results(task_name: str, metrics: Dict[str, float], num_episo
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     filename = "evaluation_results.csv"
     filepath = EVALUATION_DIR / filename
-    
+
     # Prepare data for CSV
     data = {
         'task_name': [task_name],
@@ -27,14 +37,14 @@ def save_evaluation_results(task_name: str, metrics: Dict[str, float], num_episo
         'num_episodes': [num_episodes],
         'timestamp': [timestamp]
     }
-    
+
     # Add all metrics as columns
     for metric_name, metric_value in metrics.items():
         data[metric_name] = [metric_value]
-    
+
     # Create DataFrame for new row
     new_row = pd.DataFrame(data)
-    
+
     # Check if file exists and append or create
     if filepath.exists():
         # Read existing data to get all columns
@@ -45,3 +55,25 @@ def save_evaluation_results(task_name: str, metrics: Dict[str, float], num_episo
     else:
         # Create new file
         new_row.to_csv(filepath, index=False)
+
+
+def setup_config(
+        config_path: str,
+        configs_dir: str = str(CONFIG_DIR),
+) -> DictConfig:
+    r"""Returns habitat config object composed of configs from yaml file (config_path) and overrides.
+
+    :param config_path: path to the yaml config file.
+    :param configs_dir: path to the config files root directory (defaults to :ref:`_HABITAT_CFG_DIR`).
+    :return: composed config object.
+    """
+    register_configs()
+    with lock, initialize_config_dir(
+            version_base=None,
+            config_dir=configs_dir,
+    ):
+        cfg = compose(
+            config_name=config_path,
+            overrides=[],
+        )
+    return patch_config(cfg)

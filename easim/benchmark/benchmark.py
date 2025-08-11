@@ -1,28 +1,31 @@
 from collections import defaultdict
-from typing import Optional, Dict
+from typing import Dict
 
 from easim.utils.constants import BENCHMARK_CONFIG, AGENT_LIST
-from easim.utils.habitat_utils import save_evaluation_results
-from habitat import Benchmark, Agent
+from easim.utils.habitat_utils import save_evaluation_results, setup_config
+from habitat import Agent, Env
 from tqdm import tqdm
 from easim.benchmark.trial_runner import TrialRunner
 
+from typing import Optional
 
-class HabitatBenchmark(Benchmark):
+
+class HabitatBenchmark:
     """
     A class to benchmark agents in Habitat environments.
 
     Inherits from the Habitat Benchmark class and can be extended with additional functionality if needed.
     """
 
-    def __init__(self,  task_name: str, agent: "Agent", eval_remote=False):
+    def __init__(self, task_name: str, agent: "Agent"):
         """
         Initialize the HabitatBenchmark with the given task name and remote evaluation flag.
 
         :param task_name: Name of the task/benchmark configuration to use.
         :param eval_remote: Boolean indicating whether to run evaluation remotely or locally.
         """
-        super().__init__(BENCHMARK_CONFIG[task_name], eval_remote)
+        config_env = setup_config(BENCHMARK_CONFIG[task_name])
+        self._env = Env(config=config_env)
         self.task_name = task_name
         self.agent = self.initialize_agent(agent)
         self.trial_runner = TrialRunner()
@@ -32,7 +35,6 @@ class HabitatBenchmark(Benchmark):
         if agent not in AGENT_LIST:
             raise ValueError(f"Agent '{agent}' is not supported. Available agents: {list(AGENT_LIST.keys())}")
         return AGENT_LIST[agent]["type"]()
-
 
     def evaluate(self, num_episodes: Optional[int] = None, enable_record: bool = False) -> Dict[str, float]:
         """
@@ -60,17 +62,17 @@ class HabitatBenchmark(Benchmark):
         pbar = tqdm(total=num_episodes)
         while count_episodes < num_episodes:
             metrics = self.trial_runner.run_trial(
-                self._env, self.agent, count_episodes, self.task_name, 
+                self._env, self.agent, count_episodes, self.task_name,
                 enable_record=enable_record
             )
-            
+
             self._accumulate_metrics(metrics, agg_metrics)
-            
+
             count_episodes += 1
             pbar.update(1)
 
         pbar.close()
-        
+
         return self._calculate_and_save_results(agg_metrics, count_episodes)
 
     @staticmethod
@@ -85,7 +87,7 @@ class HabitatBenchmark(Benchmark):
             # Skip episode_info which contains non-numeric data
             if m == "episode_info":
                 continue
-                
+
             if isinstance(v, dict):
                 for sub_m, sub_v in v.items():
                     if isinstance(sub_v, (int, float)):
@@ -103,12 +105,12 @@ class HabitatBenchmark(Benchmark):
         :return: Dictionary containing average evaluation metrics.
         """
         avg_metrics = {k: v / count_episodes for k, v in agg_metrics.items()}
-        
+
         # Extract agent information
         agent_name = getattr(self.agent, '__class__', type(self.agent)).__name__
         agent_model = getattr(self.agent, 'model', 'unknown')
-        
+
         # Save evaluation results to CSV
         save_evaluation_results(self.task_name, avg_metrics, count_episodes, agent_name, agent_model)
-        
+
         return avg_metrics

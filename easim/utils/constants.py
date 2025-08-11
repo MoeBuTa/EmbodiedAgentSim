@@ -33,21 +33,23 @@ EVALUATION_DIR = OUTPUT_DIR / "evaluations"
 EVALUATION_DIR.mkdir(parents=True, exist_ok=True)
 
 
+
+CONFIG_DIR = PROJECT_DIR / "easim/config"
+
 # ============================================================================
 # BENCHMARK SETTINGS
 # ============================================================================
 
 BENCHMARK_CONFIG = {
     # Navigation benchmarks
-    "objectnav_hm3d": "benchmark/nav/objectnav/objectnav_hm3d.yaml",
-    "objectnav_hm3d_with_semantic": "benchmark/nav/objectnav/objectnav_hm3d_with_semantic.yaml",
-    "objectnav_hssd_hab": "benchmark/nav/objectnav/objectnav_hssd-hab.yaml",
-    "objectnav_hssd_hab_with_semantic": "benchmark/nav/objectnav/objectnav_hssd-hab_with_semantic.yaml",
-    "objectnav_mp3d": "benchmark/nav/objectnav/objectnav_mp3d.yaml",
-    "objectnav_mp3d_with_semantic": "benchmark/nav/objectnav/objectnav_mp3d_with_semantic.yaml",
-    "objectnav_procthor_hab": "benchmark/nav/objectnav/objectnav_procthor-hab.yaml",
-    "objectnav_procthor_hab_with_semantic": "benchmark/nav/objectnav/objectnav_procthor-hab_with_semantic.yaml",
-    
+    "objectnav_hm3d": "bench_objectnav_hm3d.yaml",
+    "objectnav_mp3d": "bench_objectnav_mp3d.yaml",
+
+    "eqa_mp3d": "bench_eqa_mp3d.yaml",
+    "eqa_hm3d": "bench_eqa_hm3d.yaml",
+    "eqa_hm3d_express": "bench_eqa_express.yaml",
+    "vln_r2r": "bench_vln_r2r.yaml",
+
     "pointnav_base": "benchmark/nav/pointnav/pointnav_base.yaml",
     "pointnav_franka": "benchmark/nav/pointnav/pointnav_franka.yaml",
     "pointnav_gibson": "benchmark/nav/pointnav/pointnav_gibson.yaml",
@@ -63,13 +65,7 @@ BENCHMARK_CONFIG = {
     "instance_imagenav_hm3d_v1": "benchmark/nav/instance_imagenav/instance_imagenav_hm3d_v1.yaml",
     "instance_imagenav_hm3d_v2": "benchmark/nav/instance_imagenav/instance_imagenav_hm3d_v2.yaml",
     
-    "eqa_mp3d": "benchmark/nav/eqa/eqa_mp3d.yaml",
-    "eqa_rgbonly_mp3d": "benchmark/nav/eqa/eqa_rgbonly_mp3d.yaml",
-    "eqa_hm3d": "benchmark/nav/eqa/eqa_hm3d.yaml",
-    "eqa_rgbonly_hm3d": "benchmark/nav/eqa/eqa_rgbonly_hm3d.yaml",
-    "eqa_hm3d_express": "benchmark/nav/eqa/eqa_hm3d_express.yaml",
-    "eqa_rgbonly_hm3d_express": "benchmark/nav/eqa/eqa_rgbonly_hm3d_express.yaml",
-    "vln_r2r": "benchmark/nav/vln_r2r.yaml",
+
     
     # Rearrange benchmarks
     "rearrange_idle": "benchmark/rearrange/demo/idle.yaml",

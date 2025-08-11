@@ -1,0 +1,3 @@
+from easim.datasets.registration import _try_register_hm3d_eqa_dataset
+
+_try_register_hm3d_eqa_dataset()
