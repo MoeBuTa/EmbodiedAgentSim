@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-
-# Copyright (c) Meta Platforms, Inc. and its affiliates.
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
 import json
 import os
 from typing import TYPE_CHECKING, List, Optional
@@ -13,7 +7,7 @@ from omegaconf import OmegaConf
 from habitat.config.default_structured_configs import DatasetConfig
 from habitat.core.dataset import Dataset
 from habitat.core.registry import registry
-from habitat.core.simulator import AgentState
+from habitat.datasets.utils import VocabDict
 from habitat.tasks.eqa.eqa import EQAEpisode, QuestionData
 
 if TYPE_CHECKING:
@@ -45,6 +39,8 @@ class HM3DDatasetV1(Dataset):
     """
 
     episodes: List[EQAEpisode]
+    answer_vocab: VocabDict
+    question_vocab: VocabDict
 
     @staticmethod
     def check_config_paths_exist(config: "DictConfig") -> bool:
@@ -72,6 +68,9 @@ class HM3DDatasetV1(Dataset):
         for episode_data in deserialized["episodes"]:
             episode = self._process_episode(episode_data, scenes_dir)
             self.episodes.append(episode)
+        
+        # Build vocabularies from the loaded data
+        self._build_vocabularies(deserialized)
 
     def _process_episode(
         self, episode_data: dict, scenes_dir: Optional[str] = None
@@ -80,6 +79,15 @@ class HM3DDatasetV1(Dataset):
         
         # Handle scene_id path resolution
         scene_id = episode_data["scene_id"]
+        
+        # HM3D EQA scene_ids need .glb extension added
+        # Convert "hm3d_v0.2/train/00004-VqCaAuuoeWk" to "hm3d_v0.2/train/00004-VqCaAuuoeWk/VqCaAuuoeWk.basis.glb"
+        if not scene_id.endswith('.glb'):
+            scene_parts = scene_id.split('/')
+            if len(scene_parts) >= 3:
+                scene_name = scene_parts[-1].split('-')[-1]  # Extract "VqCaAuuoeWk" from "00004-VqCaAuuoeWk"
+                scene_id = f"{scene_id}/{scene_name}.basis.glb"
+        
         if scenes_dir is not None:
             if scene_id.startswith(DEFAULT_SCENE_PATH_PREFIX):
                 scene_id = scene_id[len(DEFAULT_SCENE_PATH_PREFIX):]
@@ -111,3 +119,28 @@ class HM3DDatasetV1(Dataset):
         })
         
         return episode
+
+    def _build_vocabularies(self, data: dict) -> None:
+        """Build question and answer vocabularies from the dataset"""
+        # Collect all unique question tokens and answer texts
+        question_tokens = set()
+        answer_texts = set()
+        
+        for episode_data in data["episodes"]:
+            question = episode_data.get("question", {})
+            
+            # Add question tokens
+            if "question_tokens" in question:
+                question_tokens.update(question["question_tokens"])
+            
+            # Add answer text
+            if "answer_text" in question:
+                answer_texts.add(question["answer_text"])
+            
+            # Also add choices as potential answers
+            choices = episode_data.get("choices", [])
+            answer_texts.update(choices)
+        
+        # Build vocabularies
+        self.question_vocab = VocabDict(word_list=sorted(list(question_tokens)))
+        self.answer_vocab = VocabDict(word_list=sorted(list(answer_texts)))

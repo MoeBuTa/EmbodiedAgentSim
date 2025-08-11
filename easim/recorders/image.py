@@ -2,6 +2,8 @@
 import numpy as np
 from pathlib import Path
 from PIL import Image
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 from easim.utils.constants import IMAGE_DIR
 
@@ -12,6 +14,7 @@ class ImageRecorder:
     def __init__(self):
         self.frame_count = 0
         self.output_path = None
+        self.task_name = None
         self.run_name = None
         self.episode_name = None
 
@@ -19,8 +22,9 @@ class ImageRecorder:
         """Set the base output path for images"""
         self.output_path = output_path
         
-    def set_run_and_episode(self, run_name: str, episode_name: str):
-        """Set run and episode names for proper directory structure"""
+    def set_task_run_and_episode(self, task_name: str, run_name: str, episode_name: str):
+        """Set task, run and episode names for proper directory structure"""
+        self.task_name = task_name
         self.run_name = run_name
         self.episode_name = episode_name
 
@@ -33,10 +37,19 @@ class ImageRecorder:
             self._save_image(rgb_frame, "rgb")
 
         if "depth" in observations:
-            depth_data = (observations["depth"] / 10 * 255).astype(np.uint8)
+            depth_data = observations["depth"]
             if depth_data.ndim == 3:
                 depth_data = depth_data.squeeze(-1)
-            depth_frame = np.stack([depth_data] * 3, axis=-1)
+            
+            # Normalize depth values to 0-1 range
+            depth_normalized = (depth_data - depth_data.min()) / (depth_data.max() - depth_data.min() + 1e-8)
+            
+            # Apply colormap (using 'plasma' which gives purple-to-yellow similar to your image)
+            colormap = cm.get_cmap('plasma')
+            depth_colored = colormap(depth_normalized)
+            
+            # Convert to 0-255 RGB format
+            depth_frame = (depth_colored[:, :, :3] * 255).astype(np.uint8)
             self._save_image(depth_frame, "depth")
 
         if "semantic" in observations:
@@ -50,11 +63,11 @@ class ImageRecorder:
 
     def _save_image(self, frame: np.ndarray, obs_type: str):
         """Save frame as image"""
-        if self.run_name is None or self.episode_name is None:
+        if self.task_name is None or self.run_name is None or self.episode_name is None:
             return
             
-        # Create directory structure: images/run_xxx/episode_xxx/
-        images_dir = IMAGE_DIR / self.run_name / self.episode_name
+        # Create directory structure: images/{task_name}/run_{}/episode_{num}_{id}/
+        images_dir = IMAGE_DIR / self.task_name / self.run_name / self.episode_name
         images_dir.mkdir(parents=True, exist_ok=True)
         image_path = images_dir / f"step_{self.frame_count:04d}_{obs_type}.jpg"
         Image.fromarray(frame.astype(np.uint8)).save(str(image_path))

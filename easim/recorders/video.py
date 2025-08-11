@@ -17,12 +17,14 @@ class VideoRecorder:
         self.resolution = resolution
         self.writer = None
         self.frames = []
+        self.task_name = None
         self.run_name = None
         self.episode_name = None
         self.output_path = None
 
-    def set_run_and_episode(self, run_name: str, episode_name: str):
-        """Set run and episode names for proper directory structure"""
+    def set_task_run_and_episode(self, task_name: str, run_name: str, episode_name: str):
+        """Set task, run and episode names for proper directory structure"""
+        self.task_name = task_name
         self.run_name = run_name
         self.episode_name = episode_name
         
@@ -30,11 +32,11 @@ class VideoRecorder:
         """Initialize video writer for RGB"""
         from easim.utils.constants import VIDEO_DIR
         
-        if self.run_name and self.episode_name:
-            # Create directory structure: videos/run_xxx/episode_xxx.mp4
-            video_dir = VIDEO_DIR / self.run_name
+        if self.task_name and self.run_name and self.episode_name:
+            # Create directory structure: videos/{task_name}/run_{}/episode_{num}_{id}/episode.mp4
+            video_dir = VIDEO_DIR / self.task_name / self.run_name / self.episode_name
             video_dir.mkdir(parents=True, exist_ok=True)
-            self.output_path = video_dir / f"{self.episode_name}.mp4"
+            self.output_path = video_dir / "episode.mp4"
         else:
             self.output_path = output_path
             

@@ -14,6 +14,27 @@ class TrialRunner:
     def __init__(self):
         self.video_recorder = VideoRecorder()
         self.image_recorder = ImageRecorder()
+        self.run_name = None
+
+    def initialize_run(self, task_name: str) -> None:
+        """
+        Initialize a new run for the trial runner.
+        
+        :param task_name: Name of the task for directory structure.
+        """
+        # Set up recording directory structure following images/{task_name}/run_{}/
+        from easim.utils.constants import IMAGE_DIR
+        
+        # Check both image and video directories to find the next run number
+        image_base_dir = IMAGE_DIR / task_name
+        video_base_dir = VIDEO_DIR / task_name
+        
+        run_number = 1
+        while (image_base_dir / f"run_{run_number:03d}").exists() or (video_base_dir / f"run_{run_number:03d}").exists():
+            run_number += 1
+
+        # Generate run name for proper directory structure
+        self.run_name = f"run_{run_number:03d}"
 
     def _setup_recording(self, episode_num: int, task_name: str, scene_id: str, observations: dict) -> None:
         """
@@ -24,14 +45,9 @@ class TrialRunner:
         :param scene_id: Scene ID path from the episode.
         :param observations: Initial observations to check for RGB availability.
         """
-        # Set up video recording directory structure
-        base_dir = VIDEO_DIR / f"{task_name}"
-        run_number = 1
-        while (base_dir / f"run_{run_number:03d}").exists():
-            run_number += 1
-
-        # Generate run and episode names for proper directory structure
-        run_name = f"run_{run_number:03d}"
+        # Use existing run_name or initialize if not set
+        if self.run_name is None:
+            self.initialize_run(task_name)
         
         # Generate episode filename with incremental number and scene identifier
         if '/' in scene_id:
@@ -45,9 +61,9 @@ class TrialRunner:
         # Use episode_num + 1 for incremental naming (episode_1, episode_2, etc.)
         episode_name = f"episode_{episode_num + 1}_{scene_identifier}"
         
-        # Setup recording with new directory structure
-        self.video_recorder.set_run_and_episode(run_name, episode_name)
-        self.image_recorder.set_run_and_episode(run_name, episode_name)
+        # Setup recording with directory structure
+        self.video_recorder.set_task_run_and_episode(task_name, self.run_name, episode_name)
+        self.image_recorder.set_task_run_and_episode(task_name, self.run_name, episode_name)
         
         # Start recording
         if "rgb" in observations:

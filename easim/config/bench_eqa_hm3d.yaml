@@ -2,8 +2,8 @@
 
 defaults:
   - /habitat: habitat_config_base
-  - /habitat/task: eqa
-  - /habitat/simulator/sensor_setups@habitat.simulator.agents.main_agent: rgbd_agent
+  - task: eqa_hm3d
+  - /habitat/simulator/sensor_setups@habitat.simulator.agents.main_agent: rgbds_agent
   - dataset: eqa_hm3d
   - _self_
 
@@ -16,19 +16,14 @@ habitat:
       main_agent:
         sim_sensors:
           rgb_sensor:
-            width: 640
-            height: 480
-            hfov: 79
-            position: [0, 0.88, 0]
+            width: 256
+            height: 256
           depth_sensor:
-            width: 640
-            height: 480
-            hfov: 79
-            min_depth: 0.5
-            max_depth: 5.0
-            position: [0, 0.88, 0]
-        height: 0.88
-        radius: 0.18
+            width: 256
+            height: 256
+          semantic_sensor:
+            width: 256
+            height: 256
     habitat_sim_v0:
       gpu_device_id: 0
       allow_sliding: False

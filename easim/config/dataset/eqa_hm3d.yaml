@@ -6,3 +6,4 @@ defaults:
 type: HM3DEQA-v1
 split: train
 data_path: data/datasets/eqa/hm3d/hm3d-eqa/hm3d-eqa.json
+scenes_dir: data/scene_datasets/
