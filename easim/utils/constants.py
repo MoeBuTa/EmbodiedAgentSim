@@ -40,73 +40,63 @@ CONFIG_DIR = PROJECT_DIR / "easim/config"
 # BENCHMARK SETTINGS
 # ============================================================================
 
-BENCHMARK_CONFIG = {
+BENCHMARK_CONFIG = [
     # Navigation benchmarks
-    "objectnav_hm3d": "bench_objectnav_hm3d.yaml",
-    "objectnav_mp3d": "bench_objectnav_mp3d.yaml",
-
-    "eqa_mp3d": "bench_eqa_mp3d.yaml",
-    "eqa_hm3d": "bench_eqa_hm3d.yaml",
-    "eqa_hm3d_express": "bench_eqa_express.yaml",
-    "vln_r2r": "bench_vln_r2r.yaml",
-
-    "pointnav_base": "benchmark/nav/pointnav/pointnav_base.yaml",
-    "pointnav_franka": "benchmark/nav/pointnav/pointnav_franka.yaml",
-    "pointnav_gibson": "benchmark/nav/pointnav/pointnav_gibson.yaml",
-    "pointnav_habitat_test": "benchmark/nav/pointnav/pointnav_habitat_test.yaml",
-    "pointnav_hm3d": "benchmark/nav/pointnav/pointnav_hm3d.yaml",
-    "pointnav_mp3d": "benchmark/nav/pointnav/pointnav_mp3d.yaml",
-    
-    "imagenav_base": "benchmark/nav/imagenav/imagenav_base.yaml",
-    "imagenav_gibson": "benchmark/nav/imagenav/imagenav_gibson.yaml",
-    "imagenav_mp3d": "benchmark/nav/imagenav/imagenav_mp3d.yaml",
-    "imagenav_test": "benchmark/nav/imagenav/imagenav_test.yaml",
-    
-    "instance_imagenav_hm3d_v1": "benchmark/nav/instance_imagenav/instance_imagenav_hm3d_v1.yaml",
-    "instance_imagenav_hm3d_v2": "benchmark/nav/instance_imagenav/instance_imagenav_hm3d_v2.yaml",
-    
-
+    "objectnav_hm3d",
+    "objectnav_mp3d",
+    "eqa_mp3d",
+    "eqa_hm3d",
+    "eqa_hm3d_express",
+    "vln_r2r",
+    "pointnav_base",
+    "pointnav_franka",
+    "pointnav_gibson",
+    "pointnav_habitat_test",
+    "pointnav_hm3d",
+    "pointnav_mp3d",
+    "imagenav_base",
+    "imagenav_gibson",
+    "imagenav_mp3d",
+    "imagenav_test",
+    "instance_imagenav_hm3d_v1",
+    "instance_imagenav_hm3d_v2",
     
     # Rearrange benchmarks
-    "rearrange_idle": "benchmark/rearrange/demo/idle.yaml",
-    "rearrange_idle_single_camera": "benchmark/rearrange/demo/idle_single_camera.yaml",
-    "rearrange_interact": "benchmark/rearrange/demo/interact.yaml",
-    
-    "rearrange_prepare_groceries": "benchmark/rearrange/multi_task/prepare_groceries.yaml",
-    "rearrange_multi_task": "benchmark/rearrange/multi_task/rearrange.yaml",
-    "rearrange_easy": "benchmark/rearrange/multi_task/rearrange_easy.yaml",
-    "rearrange_set_table": "benchmark/rearrange/multi_task/set_table.yaml",
-    "rearrange_tidy_house": "benchmark/rearrange/multi_task/tidy_house.yaml",
-    "pddl_geo_base_task": "benchmark/rearrange/multi_task/pddl_geo_base_task.yaml",
-    
-    "play": "benchmark/rearrange/play/play.yaml",
-    "play_human": "benchmark/rearrange/play/play_human.yaml",
-    "play_spot": "benchmark/rearrange/play/play_spot.yaml",
-    "play_stretch": "benchmark/rearrange/play/play_stretch.yaml",
-    
-    "skill_close_cab": "benchmark/rearrange/skills/close_cab.yaml",
-    "skill_close_fridge": "benchmark/rearrange/skills/close_fridge.yaml",
-    "skill_nav_to_obj": "benchmark/rearrange/skills/nav_to_obj.yaml",
-    "skill_open_cab": "benchmark/rearrange/skills/open_cab.yaml",
-    "skill_open_fridge": "benchmark/rearrange/skills/open_fridge.yaml",
-    "skill_pick": "benchmark/rearrange/skills/pick.yaml",
-    "skill_pick_spot": "benchmark/rearrange/skills/pick_spot.yaml",
-    "skill_place": "benchmark/rearrange/skills/place.yaml",
-    "skill_reach_state": "benchmark/rearrange/skills/reach_state.yaml",
-    
-    "hab3_bench_humanoid_oracle": "benchmark/rearrange/hab3_bench/humanoid_oracle.yaml",
-    "hab3_bench_multi_agent": "benchmark/rearrange/hab3_bench/multi_agent_bench.yaml",
-    "hab3_bench_single_agent": "benchmark/rearrange/hab3_bench/single_agent_bench.yaml",
-    "hab3_bench_spot_humanoid_oracle": "benchmark/rearrange/hab3_bench/spot_humanoid_oracle.yaml",
-    "hab3_bench_spot_oracle": "benchmark/rearrange/hab3_bench/spot_oracle.yaml",
-    "hab3_bench_spot_spot_oracle": "benchmark/rearrange/hab3_bench/spot_spot_oracle.yaml",
+    "rearrange_idle",
+    "rearrange_idle_single_camera",
+    "rearrange_interact",
+    "rearrange_prepare_groceries",
+    "rearrange_multi_task",
+    "rearrange_easy",
+    "rearrange_set_table",
+    "rearrange_tidy_house",
+    "pddl_geo_base_task",
+    "play",
+    "play_human",
+    "play_spot",
+    "play_stretch",
+    "skill_close_cab",
+    "skill_close_fridge",
+    "skill_nav_to_obj",
+    "skill_open_cab",
+    "skill_open_fridge",
+    "skill_pick",
+    "skill_pick_spot",
+    "skill_place",
+    "skill_reach_state",
+    "hab3_bench_humanoid_oracle",
+    "hab3_bench_multi_agent",
+    "hab3_bench_single_agent",
+    "hab3_bench_spot_humanoid_oracle",
+    "hab3_bench_spot_oracle",
+    "hab3_bench_spot_spot_oracle",
     
     # Multi-agent benchmarks
-    "multi_agent_hssd_spot_human": "benchmark/multi_agent/hssd_spot_human.yaml",
-    "multi_agent_hssd_spot_human_social_nav": "benchmark/multi_agent/hssd_spot_human_social_nav.yaml",
-    "multi_agent_social_nav": "benchmark/multi_agent/pddl/multi_agent_social_nav.yaml",
-    "multi_agent_tidy_house": "benchmark/multi_agent/pddl/multi_agent_tidy_house.yaml",
-}
+    "multi_agent_hssd_spot_human",
+    "multi_agent_hssd_spot_human_social_nav",
+    "multi_agent_social_nav",
+    "multi_agent_tidy_house",
+]
 
 
 
@@ -118,6 +108,42 @@ DEFAULT_FPS = 30
 DEFAULT_VIDEO_RESOLUTION = (640, 480)
 DEFAULT_VIDEO_CODEC = 'mp4v'
 
+
+
+# ============================================================================
+# HABITAT CONFIG PATHS
+# ============================================================================
+
+# Base habitat-lab config directory
+HABITAT_CONFIG_DIR = PROJECT_DIR / "habitat-lab" / "habitat-lab" / "habitat" / "config" / "benchmark"
+
+# Task-specific config paths
+HM3D_OBJECTNAV_CONFIG = f"{HABITAT_CONFIG_DIR}/nav/objectnav/objectnav_hm3d.yaml"
+MP3D_OBJECTNAV_CONFIG = f"{HABITAT_CONFIG_DIR}/nav/objectnav/objectnav_mp3d.yaml"
+MP3D_EQA_CONFIG = f"{HABITAT_CONFIG_DIR}/nav/eqa_mp3d.yaml"
+R2R_VLN_CONFIG = f"{HABITAT_CONFIG_DIR}/nav/vln_r2r.yaml"
+
+# Dataset paths  
+SCENES_DIR = f"{DATA_PATH}/scene_datasets"
+HM3D_SCENES_DIR = f"{DATA_PATH}/scene_datasets/hm3d_v0.2"
+MP3D_SCENES_DIR = f"{DATA_PATH}/scene_datasets/mp3d"
+
+# Task data paths
+HM3D_OBJECTNAV_DATA = f"{DATA_PATH}/datasets/objectnav/hm3d/v2/{{split}}/{{split}}.json.gz"
+MP3D_OBJECTNAV_DATA = f"{DATA_PATH}/datasets/objectnav/mp3d/v1/{{split}}/{{split}}.json.gz"
+MP3D_EQA_DATA = f"{DATA_PATH}/datasets/eqa/mp3d/v1/{{split}}/{{split}}.json.gz"
+R2R_VLN_DATA = f"{DATA_PATH}/datasets/vln/mp3d/r2r/v1/{{split}}/{{split}}.json.gz"
+
+# HM3D EQA specific files (no train/val split)
+HM3D_EQA_QUESTIONS = f"{DATA_PATH}/datasets/eqa/hm3d/questions.csv"
+HM3D_EQA_SCENE_POSES = f"{DATA_PATH}/datasets/eqa/hm3d/scene_init_poses.csv"
+
+# Express bench specific files
+HM3D_EXPRESS_BENCH = f"{DATA_PATH}/datasets/eqa/hm3d/express-bench.json"
+
+# Scene dataset config paths
+HM3D_SCENE_DATASET = f"{HM3D_SCENES_DIR}/hm3d_annotated_basis.scene_dataset_config.json"
+MP3D_SCENE_DATASET = f"{MP3D_SCENES_DIR}/mp3d.scene_dataset_config.json"
 
 
 # ============================================================================

@@ -42,15 +42,21 @@ Examples:
     benchmark_parser = subparsers.add_parser('benchmark', help='Run agent benchmarking')
     benchmark_parser.add_argument(
         '--task', 
-        choices=list(BENCHMARK_CONFIG.keys()), 
+        choices=BENCHMARK_CONFIG,
         default='objectnav_hm3d',
         help='Benchmark task to run'
     )
     benchmark_parser.add_argument(
         '--episodes', 
         type=int, 
-        default=None, 
+        default=200,
         help='Number of episodes to run (default: run all available episodes)'
+    )
+    benchmark_parser.add_argument(
+        '--stage',
+        choices=['train', 'val', 'test', 'val_unseen', 'val_seen'],
+        default='val',
+        help='Stage of the benchmark to run (default: val)'
     )
     benchmark_parser.add_argument(
         '--record',
