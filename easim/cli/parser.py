@@ -33,10 +33,10 @@ Examples:
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
 
     # Interactive command
-    interactive_parser = subparsers.add_parser('interactive', help='Run interactive navigation demo')
+    subparsers.add_parser('interactive', help='Run interactive navigation demo')
 
     # List tasks command
-    list_tasks_parser = subparsers.add_parser('list-tasks', help='List available benchmark tasks')
+    subparsers.add_parser('list-tasks', help='List available benchmark tasks')
 
     # Benchmark command
     benchmark_parser = subparsers.add_parser('benchmark', help='Run agent benchmarking')

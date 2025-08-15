@@ -145,6 +145,37 @@ HM3D_EXPRESS_BENCH = f"{DATA_PATH}/datasets/eqa/hm3d/express-bench.json"
 HM3D_SCENE_DATASET = f"{HM3D_SCENES_DIR}/hm3d_annotated_basis.scene_dataset_config.json"
 MP3D_SCENE_DATASET = f"{MP3D_SCENES_DIR}/mp3d.scene_dataset_config.json"
 
+# ============================================================================
+# HABITAT TASK CONFIGURATIONS
+# ============================================================================
+
+HABITAT_TASK_CONFIGS = {
+    'objectnav_hm3d': {
+        'config_file': HM3D_OBJECTNAV_CONFIG,
+        'data_path': HM3D_OBJECTNAV_DATA,
+        'scene_dataset': HM3D_SCENE_DATASET,
+        'has_success_distance': True,
+    },
+    'objectnav_mp3d': {
+        'config_file': MP3D_OBJECTNAV_CONFIG,
+        'data_path': MP3D_OBJECTNAV_DATA,
+        'scene_dataset': MP3D_SCENE_DATASET,
+        'has_success_distance': True,
+    },
+    'eqa_mp3d': {
+        'config_file': MP3D_EQA_CONFIG,
+        'data_path': MP3D_EQA_DATA,
+        'scene_dataset': MP3D_SCENE_DATASET,
+        'has_success_distance': False,
+    },
+    'vln_r2r': {
+        'config_file': R2R_VLN_CONFIG,
+        'data_path': R2R_VLN_DATA,
+        'scene_dataset': MP3D_SCENE_DATASET,
+        'has_success_distance': True,
+    },
+}
+
 
 # ============================================================================
 # AGENT SETTINGS

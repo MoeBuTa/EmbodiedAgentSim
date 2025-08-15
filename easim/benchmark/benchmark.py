@@ -2,7 +2,8 @@ from collections import defaultdict
 from typing import Dict
 
 from easim.utils.constants import AGENT_LIST
-from easim.utils.habitat_utils import save_evaluation_results, get_habitat_config
+from easim.utils.functions import save_evaluation_results
+from easim.utils.configs import habitat_lab_config
 from habitat import Agent, Env
 from tqdm import tqdm
 from easim.benchmark.trial_runner import TrialRunner
@@ -24,7 +25,7 @@ class HabitatBenchmark:
         :param task_name: Name of the task/benchmark configuration to use.
         :param eval_remote: Boolean indicating whether to run evaluation remotely or locally.
         """
-        config_env = get_habitat_config(task_name, stage, episodes)
+        config_env = habitat_lab_config(task_name, stage, episodes)
         self._env = Env(config=config_env)
         self.task_name = task_name
         self.episodes = episodes
